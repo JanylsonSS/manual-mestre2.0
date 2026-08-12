@@ -1,0 +1,38 @@
+-- ═══════════════════════════════════════════════════════════════
+--  Relatório: Curva ABC de praças
+--
+--  Responde: "Quais cidades merecem investimento de verdade?"
+--
+--  Regra (a mesma do Módulo 01):
+--      A = as cidades necessárias para atingir 80% do faturamento
+--      B = de 80% até 95%
+--      C = os 5% restantes
+--
+--  Colunas: posicao, cidade, uf, faturamento, share_pct,
+--           share_acumulado_pct, classe
+-- ═══════════════════════════════════════════════════════════════
+
+-- TODO: escrever a consulta.
+--
+-- Algoritmo:
+--   1. Faturamento por cidade
+--   2. Share individual de cada uma
+--   3. Share ACUMULADO, na ordem decrescente de faturamento
+--   4. Classificar pelo acumulado
+--
+-- 💡 Acumulado com window function (limpo):
+--       SUM(share) OVER (ORDER BY faturamento DESC
+--                        ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+--
+-- 💡 Sem window function (subconsulta correlacionada):
+--       (SELECT SUM(b.share) FROM cte b WHERE b.faturamento >= a.faturamento)
+--
+--    ⚠️ Esta versão tem um bug sutil: se duas cidades tiverem
+--       EXATAMENTE o mesmo faturamento, ambas somam o share da outra.
+--       Como você resolveria o empate? (Dica: desempate por nome.)
+--
+-- ⚠️ Detalhe da regra que quase todo mundo erra: a cidade que
+--    CRUZA os 80% ainda é classe A. A regra é "as cidades
+--    necessárias PARA ATINGIR 80%", não "as que estão abaixo de 80%".
+--
+-- ✅ Verificação: a soma de share_pct deve dar 100 (± arredondamento).

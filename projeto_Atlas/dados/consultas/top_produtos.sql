@@ -1,0 +1,28 @@
+-- ═══════════════════════════════════════════════════════════════
+--  Relatório: Ranking de produtos
+--
+--  Responde: "O que mais vende? E o que mais LUCRA?"
+--            (raramente é a mesma lista)
+--
+--  Parâmetros:
+--      :limite      quantos produtos trazer (padrão 10)
+--
+--  Colunas: posicao_receita, posicao_margem, sku, produto, categoria,
+--           unidades, receita, margem_reais, margem_pct, preco_medio
+-- ═══════════════════════════════════════════════════════════════
+
+-- TODO: escrever a consulta.
+--
+-- 🎯 O ponto do relatório: mostrar a posição no ranking de RECEITA
+--    lado a lado com a posição no ranking de MARGEM. Um produto que
+--    é 1º em receita e 15º em margem é um produto que dá trabalho e
+--    não paga a conta.
+--
+-- 💡 Como calcular a posição sem window function?
+--    O SQLite suporta ROW_NUMBER() OVER (ORDER BY ...) desde a 3.25,
+--    e é o caminho limpo. Se quiser exercitar a alternativa:
+--        (SELECT COUNT(*) FROM cte b WHERE b.receita > a.receita) + 1
+--
+-- ⚠️ `preco_medio` = receita / unidades. Ele revela o desconto médio
+--    praticado: se ficar bem abaixo do preço de catálogo, o produto
+--    está sendo vendido em promoção o tempo todo.

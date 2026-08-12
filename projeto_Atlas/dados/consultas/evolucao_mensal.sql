@@ -1,0 +1,39 @@
+-- ═══════════════════════════════════════════════════════════════
+--  Relatório: Evolução mensal
+--
+--  Responde: "Estamos crescendo? Em que ritmo? Onde?"
+--
+--  Colunas: mes, pedidos, pedidos_cancelados, taxa_cancelamento,
+--           clientes_unicos, itens, faturamento, ticket_medio,
+--           faturamento_mes_anterior, variacao_pct,
+--           site, app, marketplace
+-- ═══════════════════════════════════════════════════════════════
+
+-- TODO: escrever a consulta.
+--
+-- 💡 Agrupar por mês: strftime('%Y-%m', p.data_pedido)
+--
+-- 💡 Composição por canal = pivô com SUM(CASE WHEN ...):
+--       SUM(CASE WHEN canal = 'site' THEN total ELSE 0 END) AS site
+--
+-- 💡 Variação vs. mês anterior — duas abordagens:
+--    (a) Window function:  LAG(faturamento) OVER (ORDER BY mes)
+--    (b) Self join da CTE mensal consigo mesma
+--
+--    Para (b), como calcular "o mês anterior" em formato 'AAAA-MM'?
+--    Dica: strftime('%Y-%m', date(mes || '-01', '-1 month'))
+--
+-- ⚠️ Meses sem venda simplesmente NÃO APARECEM num GROUP BY.
+--    Se o mês 06 teve zero pedidos, o gráfico da diretoria fica com
+--    um buraco em vez de um vale — e a leitura muda completamente.
+--
+--    Solução: gere o calendário com CTE recursiva e faça LEFT JOIN:
+--        WITH RECURSIVE meses(mes) AS (
+--            SELECT '2026-01'
+--            UNION ALL
+--            SELECT strftime('%Y-%m', date(mes || '-01', '+1 month'))
+--            FROM meses WHERE mes < '2026-12'
+--        )
+--
+-- ⚠️ A taxa de cancelamento usa TODOS os pedidos no denominador,
+--    não só os pagos. Cuidado para não filtrar cedo demais.

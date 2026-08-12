@@ -1,0 +1,52 @@
+-- ═══════════════════════════════════════════════════════════════
+--  Relatório: Qualidade dos dados
+--
+--  Responde: "Posso confiar nos números que acabei de apresentar?"
+--
+--  ⚠️ Este é o relatório que ninguém pede e todo mundo precisa.
+--     A dor do M03 foi dado inconsistente. Este relatório é a
+--     vacina — rode-o SEMPRE antes de apresentar qualquer número.
+--
+--  Colunas: verificacao, severidade, ocorrencias, exemplo
+-- ═══════════════════════════════════════════════════════════════
+
+-- TODO: escrever a consulta.
+--
+-- Estrutura: um UNION ALL com uma linha por verificação.
+--
+--   SELECT 'Pedidos sem itens' AS verificacao,
+--          'alta'              AS severidade,
+--          COUNT(*)            AS ocorrencias,
+--          MIN(id)             AS exemplo
+--   FROM pedidos p
+--   WHERE NOT EXISTS (SELECT 1 FROM itens_pedido i WHERE i.pedido_id = p.id)
+--
+--   UNION ALL
+--   ...
+--
+--
+-- Verificações a implementar:
+--
+--   [alta]  Pedidos sem nenhum item
+--   [alta]  Itens com preco_unitario = 0
+--   [alta]  Produtos com preco < custo (prejuízo)
+--   [alta]  Clientes com e-mail duplicado ignorando maiúsculas
+--   [media] Itens cujo preco_unitario difere >30% do preço de catálogo
+--   [media] Pedidos com data no futuro
+--   [media] Clientes cadastrados depois do primeiro pedido deles
+--   [media] Cidades gravadas com grafias diferentes
+--           (dica: GROUP BY lower(trim(cidade)) HAVING COUNT(DISTINCT cidade) > 1)
+--   [baixa] Produtos ativos sem estoque
+--   [baixa] Produtos sem venda há mais de 90 dias
+--   [baixa] Clientes sem telefone
+--
+--
+-- 💡 Complemente com os PRAGMAs, que não cabem em SELECT:
+--       PRAGMA integrity_check;     -- corrupção física do arquivo
+--       PRAGMA foreign_key_check;   -- órfãos (aparecem se o PRAGMA
+--                                   -- foreign_keys ficou desligado
+--                                   -- em alguma carga)
+--
+-- 💭 Constraint garante o PRESENTE, não o passado. Se o banco foi
+--    carregado antes de você adicionar um CHECK, os dados antigos
+--    podem violá-lo silenciosamente. Este relatório encontra isso.

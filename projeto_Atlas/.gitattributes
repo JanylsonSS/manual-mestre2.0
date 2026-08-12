@@ -1,0 +1,54 @@
+# ═══════════════════════════════════════════════════════════════
+#  Atlas — .gitattributes
+#
+#  Resolve o problema mais chato de times mistos Windows/Linux:
+#  fins de linha. Windows usa CRLF (\r\n), Unix usa LF (\n).
+#
+#  Sem este arquivo, um dev no Windows commita e o diff mostra
+#  "3.000 linhas alteradas" quando ele mudou uma. Todo mundo perde
+#  tempo e os conflitos ficam impossíveis de ler.
+#
+#  Com `text=auto`, o Git normaliza para LF no repositório e
+#  converte para o padrão local no checkout.
+# ═══════════════════════════════════════════════════════════════
+
+# Padrão: detecta arquivos de texto e normaliza para LF no repo
+* text=auto
+
+# ── Sempre LF (mesmo no Windows) ─────────────────────────────
+# Scripts shell QUEBRAM se tiverem CRLF.
+*.sh        text eol=lf
+*.py        text eol=lf
+*.sql       text eol=lf
+*.md        text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.json      text eol=lf
+*.toml      text eol=lf
+*.cfg       text eol=lf
+*.ini       text eol=lf
+*.csv       text eol=lf
+.gitignore  text eol=lf
+Dockerfile  text eol=lf
+
+# ── Sempre CRLF ──────────────────────────────────────────────
+# Scripts PowerShell e batch preferem CRLF.
+*.ps1       text eol=crlf
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+
+# ── Binários: nunca converter ────────────────────────────────
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.pdf       binary
+*.zip       binary
+*.gz        binary
+*.xlsx      binary
+*.db        binary
+*.sqlite3   binary
+
+# ── Linguagem para estatísticas e diff ───────────────────────
+*.ipynb     linguist-language=Python

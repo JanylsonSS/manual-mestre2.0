@@ -1,0 +1,27 @@
+-- ═══════════════════════════════════════════════════════════════
+--  Relatório: Faturamento e margem por categoria
+--
+--  Responde: "Quais categorias sustentam o negócio, e quais só
+--             geram volume sem margem?"
+--
+--  Colunas: categoria, produtos, produtos_vendidos, sem_giro,
+--           unidades, receita, custo_total, margem_reais,
+--           margem_pct, share_pct
+-- ═══════════════════════════════════════════════════════════════
+
+-- TODO: escrever a consulta.
+--
+-- 💡 A margem de um item é: quantidade * (preco_unitario - produto.custo)
+--    Repare que usa o `preco_unitario` do ITEM (o praticado na venda),
+--    não o `preco` do produto (o de catálogo hoje).
+--
+-- ⚠️ Use LEFT JOIN a partir de `categorias`. Uma categoria sem
+--    nenhuma venda deve aparecer com zeros, não sumir do relatório.
+--    Categoria que sumiu é categoria que ninguém investiga.
+--
+-- ⚠️ `sem_giro` = produtos da categoria que nunca venderam.
+--    Dica: SUM(CASE WHEN unidades = 0 THEN 1 ELSE 0 END) sobre uma
+--    CTE que já calculou as unidades por produto.
+--
+-- 💭 Pergunta para o relatório: existe alguma categoria com receita
+--    alta e margem baixa? Ela merece uma conversa com o comercial.

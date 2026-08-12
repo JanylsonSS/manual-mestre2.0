@@ -1,0 +1,180 @@
+# ═══════════════════════════════════════════════════════════════
+#  Atlas — configuração do projeto
+#  Módulo 04 · PEP 621
+#
+#  Este arquivo substitui o requirements.txt e centraliza TUDO:
+#  metadados, dependências, e configuração de todas as ferramentas.
+#
+#  Instalação editável (desenvolvimento):
+#      pip install -e ".[dev]"
+#
+#  "Editável" (-e) cria um link para o código-fonte em vez de copiá-lo.
+#  Você edita e a mudança vale na hora, sem reinstalar.
+# ═══════════════════════════════════════════════════════════════
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+# ═══════════════════════════════════════════════════════════════
+#  Metadados
+# ═══════════════════════════════════════════════════════════════
+[project]
+name = "atlas"
+version = "0.4.0"
+description = "Sistema central da Aurora Comércio"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Proprietary"}
+authors = [
+    {name = "Aurora Comércio — Engenharia", email = "engenharia@aurora.com.br"},
+]
+keywords = ["etl", "relatorios", "vendas"]
+
+# TODO: declare as dependências de execução.
+#   M01–M03: nenhuma (só biblioteca padrão)
+#   M04: pydantic>=2.0  (validação na fronteira)
+dependencies = [
+    # "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+# Instale com: pip install -e ".[dev]"
+# TODO: adicionar as ferramentas de desenvolvimento
+dev = [
+    # "pytest>=8.0",
+    # "pytest-cov>=5.0",
+    # "mypy>=1.8",
+    # "ruff>=0.6",
+]
+
+[project.scripts]
+# TODO: descomente para criar o comando `atlas` no terminal.
+#   Depois de `pip install -e .`, você digita `atlas relatorio --todos`
+#   em vez de `python main.py relatorio --todos`.
+# atlas = "atlas.cli:main"
+
+[project.urls]
+# TODO: aponte para o SEU repositório
+# Repository = "https://github.com/seu-usuario/atlas"
+
+
+# ═══════════════════════════════════════════════════════════════
+#  Layout src/
+# ═══════════════════════════════════════════════════════════════
+# 💭 Por que a pasta src/?
+#
+#    Sem ela, `import atlas` funciona por ACIDENTE: o Python encontra
+#    a pasta local antes do pacote instalado. Você acha que está
+#    testando o pacote e está testando a cópia de trabalho.
+#
+#    Com src/, o import só funciona se o pacote estiver instalado —
+#    garantindo que você testa o que o usuário vai receber.
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+# TODO: se quiser distribuir os .sql junto com o pacote:
+# atlas = ["../dados/*.sql", "../dados/consultas/*.sql"]
+
+
+# ═══════════════════════════════════════════════════════════════
+#  Ruff — linter e formatador
+# ═══════════════════════════════════════════════════════════════
+# Instale: pip install ruff
+# Verifique: ruff check src/
+# Corrija:  ruff check --fix src/
+# Formate:  ruff format src/
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src"]
+
+[tool.ruff.lint]
+# TODO: escolha os conjuntos de regras.
+#   E   pycodestyle (estilo)
+#   F   pyflakes (erros prováveis: variável não usada, import morto)
+#   I   isort (ordem dos imports)
+#   UP  pyupgrade (sintaxe moderna: list[str] em vez de List[str])
+#   B   flake8-bugbear (armadilhas — inclusive o argumento mutável!)
+#   SIM flake8-simplify (simplificações)
+#   RUF regras do próprio ruff
+select = ["E", "F"]
+# select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+ignore = [
+    "E501",  # linha longa — o formatador já cuida disso
+]
+
+[tool.ruff.lint.per-file-ignores]
+# TODO: os notebooks e scripts de exemplo podem ser mais frouxos
+# "scripts/*" = ["T201"]   # permite print
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+
+# ═══════════════════════════════════════════════════════════════
+#  mypy — verificação estática de tipos
+# ═══════════════════════════════════════════════════════════════
+# Instale: pip install mypy
+# Rode:    mypy src/
+#
+# 🧭 ESTRATÉGIA: comece FROUXO.
+#    Ativar strict=true de cara num projeto existente gera centenas de
+#    erros e você desiste. Comece com o básico, corrija, e vá apertando
+#    módulo por módulo com os overrides abaixo.
+[tool.mypy]
+python_version = "3.10"
+files = ["src"]
+
+# Nível 1 — comece aqui
+warn_return_any = true
+warn_unused_configs = true
+warn_redundant_casts = true
+
+# TODO: Nível 2 — descomente quando o nível 1 estiver limpo
+# disallow_untyped_defs = true
+# disallow_incomplete_defs = true
+# check_untyped_defs = true
+
+# TODO: Nível 3 — o pacote completo
+# strict = true
+
+# TODO: aperte módulo a módulo em vez de tudo de uma vez
+# [[tool.mypy.overrides]]
+# module = "atlas.modelos"
+# strict = true
+
+
+# ═══════════════════════════════════════════════════════════════
+#  pytest — testes (Módulo 12)
+# ═══════════════════════════════════════════════════════════════
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+# TODO no M12: descomente para exigir cobertura
+# addopts = "-v --cov=atlas --cov-report=term-missing --cov-fail-under=70"
+
+markers = [
+    "lento: testes que demoram (rode com -m 'not lento')",
+    "integracao: exigem banco ou rede",
+]
+
+
+# ═══════════════════════════════════════════════════════════════
+#  coverage
+# ═══════════════════════════════════════════════════════════════
+[tool.coverage.run]
+source = ["src/atlas"]
+omit = ["*/__main__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]

@@ -1,0 +1,134 @@
+# ═══════════════════════════════════════════════════════════════
+#  Atlas — Aurora Comércio
+#  .gitignore
+#
+#  Regra que orienta tudo aqui:
+#      Versione o que é FONTE.
+#      Ignore o que é GERADO, SECRETO ou LOCAL.
+#
+#  Gerado a partir de: gitignore.io (Python + VisualStudioCode + OS)
+# ═══════════════════════════════════════════════════════════════
+
+# ── Segredos ─────────────────────────────────────────────────
+# 🔴 Prioridade máxima. Segredo commitado é segredo comprometido.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credenciais*.json
+secrets/
+
+# ── Ambientes virtuais ───────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+.python-version
+
+# ── Python: bytecode e caches ────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# ── Python: build e distribuição ─────────────────────────────
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+sdist/
+wheels/
+pip-log.txt
+
+# ── Ferramentas de qualidade ─────────────────────────────────
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# ── Saídas geradas pelo Atlas ────────────────────────────────
+# Relatórios são RESULTADO, não fonte. Quem clonar o projeto
+# gera os seus rodando o programa.
+saida/*
+!saida/.gitkeep
+dados/processados/*
+!dados/processados/.gitkeep
+*.log
+logs/
+
+# ── Bancos de dados locais (M03) ─────────────────────────────
+# O banco é GERADO pela migração a partir dos CSVs. Quem clonar o
+# projeto roda `python main.py migrar` e produz o seu.
+# Versionar um .db binário no Git é péssimo: cada commit guarda o
+# arquivo inteiro de novo, e o diff é ilegível.
+*.db
+*.sqlite
+*.sqlite3
+
+# ⚠️ O modo WAL cria DOIS arquivos irmãos ao lado do banco.
+#    Esquecer estas duas linhas é o erro mais comum ao ligar WAL —
+#    eles aparecem no `git status` e alguém acaba commitando.
+*.db-wal
+*.db-shm
+*.sqlite-wal
+*.sqlite-shm
+
+# Os .sql SÃO versionados: eles são fonte, não resultado.
+!dados/schema.sql
+!dados/indices.sql
+!dados/consultas/*.sql
+
+# ── Jupyter ──────────────────────────────────────────────────
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# ── Editores ─────────────────────────────────────────────────
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+.spyderproject
+.ropeproject
+
+# ── Sistema operacional ──────────────────────────────────────
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+# Linux
+.fuse_hidden*
+.directory
+.Trash-*
+
+# ═══════════════════════════════════════════════════════════════
+#  ⚠️ LEMBRETE
+#
+#  O .gitignore SÓ vale para arquivos que o Git ainda não conhece.
+#  Se você já commitou algo que deveria estar aqui:
+#
+#      git rm --cached <arquivo>
+#      git commit -m "chore: remove <arquivo> do versionamento"
+#
+#  E se era um SEGREDO que já foi para o servidor:
+#      1º passo: TROQUE A SENHA/CHAVE. Agora.
+#      2º passo: só depois pense em reescrever o histórico.
+# ═══════════════════════════════════════════════════════════════

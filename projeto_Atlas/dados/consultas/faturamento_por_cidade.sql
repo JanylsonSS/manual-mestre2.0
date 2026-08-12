@@ -1,0 +1,57 @@
+-- ═══════════════════════════════════════════════════════════════
+--  Relatório: Faturamento por praça
+--
+--  Responde: "Quanto vendemos por cidade?"
+--  — a pergunta original que originou o Atlas no Módulo 01.
+--
+--  Parâmetros (opcionais, via placeholders nomeados):
+--      :data_inicio   'AAAA-MM-DD'
+--      :data_fim      'AAAA-MM-DD'
+--
+--  Colunas esperadas na saída:
+--      cidade, uf, pedidos, clientes, itens,
+--      faturamento, ticket_medio, share_pct
+-- ═══════════════════════════════════════════════════════════════
+
+-- TODO: escrever a consulta.
+--
+-- Estrutura sugerida com CTEs (leia de cima para baixo):
+--
+--   WITH vendas AS (
+--       -- itens_pedido + pedidos + clientes, filtrando status='pago'
+--       -- e o período, se informado
+--   ),
+--   por_cidade AS (
+--       -- agrega: COUNT(DISTINCT pedido), COUNT(DISTINCT cliente),
+--       --         SUM(quantidade), SUM(total)
+--   ),
+--   total AS (
+--       -- SUM geral, para calcular o share
+--   )
+--   SELECT ... FROM por_cidade CROSS JOIN total ORDER BY faturamento DESC;
+--
+--
+-- ⚠️ ARMADILHA 1 — o JOIN multiplica linhas.
+--    Depois de juntar `pedidos` com `itens_pedido`, cada pedido
+--    aparece uma vez POR ITEM. Um COUNT(*) contaria itens, não
+--    pedidos. Use COUNT(DISTINCT p.id).
+--
+-- ⚠️ ARMADILHA 2 — o frete infla.
+--    Se você somar p.frete depois do JOIN com itens, o frete de um
+--    pedido de 3 itens é somado 3 vezes. Agregue o frete numa CTE
+--    separada, ou não o inclua aqui.
+--
+-- ⚠️ ARMADILHA 3 — divisão inteira e por zero.
+--    ticket_medio = faturamento / pedidos.
+--    Se `pedidos` for inteiro, force real (multiplique por 1.0).
+--    Se puder ser zero, proteja com NULLIF(pedidos, 0).
+--
+-- ⚠️ ARMADILHA 4 — o filtro de período com placeholder opcional.
+--    Um jeito comum: WHERE (:data_inicio IS NULL OR p.data_pedido >= :data_inicio)
+--
+--
+-- ✅ VERIFICAÇÃO OBRIGATÓRIA:
+--    A soma da coluna `faturamento` deve bater EXATAMENTE com o
+--    número do relatório do Módulo 01 sobre o mesmo CSV.
+--    Se não bater, quase sempre é: filtro de status esquecido,
+--    ou JOIN inflando o total.

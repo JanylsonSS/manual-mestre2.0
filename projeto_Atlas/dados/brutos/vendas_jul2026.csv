@@ -1,0 +1,31 @@
+id,data,cliente,cidade,uf,categoria,produto,quantidade,preco_unitario,status,canal
+1001,2026-07-01,Maria Souza,Campinas,SP,Informática,Notebook Dell Inspiron 15,2,2599.90,pago,site
+1002,2026-07-01,João Lima,São Paulo,SP,Periféricos,Mouse Logitech MX,10,89.90,pago,app
+1003,2026-07-02,Ana Costa,Campinas,SP,Periféricos,Teclado Redragon K552,3,249.00,cancelado,site
+1004,2026-07-02,Pedro Alves,Sorocaba,SP,Monitores,Monitor LG 24 UltraWide,1,1199.00,pago,marketplace
+1005,2026-07-03,Carla Dias,São Paulo,SP,Informática,Notebook Dell Inspiron 15,1,2599.90,pago,site
+1006,2026-07-04,Maria Souza,Campinas,SP,Monitores,Monitor LG 24 UltraWide,4,1199.00,pago,app
+1007,2026-07-05,Bruno Rocha,Ribeirão Preto,SP,Periféricos,Mouse Logitech MX,25,89.90,pago,marketplace
+1008,2026-07-06,Elisa Martins,São Paulo,SP,Periféricos,Teclado Redragon K552,6,249.00,pendente,site
+1009,2026-07-08,Maria Souza,Campinas,SP,Informática,Notebook Dell Inspiron 15,1,2599.90,pago,site
+1010,2026-07-09,Fábio Nunes,Sorocaba,SP,Periféricos,Mouse Logitech MX,8,89.90,pago,app
+1011,2026-07-10,Ana Costa,Campinas,SP,Monitores,Monitor Samsung Odyssey,2,1849.00,pago,site
+1012,2026-07-12,Gustavo Reis,Jundiaí,SP,Informática,Notebook Acer Nitro 5,3,3299.00,pago,marketplace
+1013,2026-07-14,Helena Prado,Santos,SP,Periféricos,Headset HyperX Cloud II,7,399.00,pago,app
+1014,2026-07-15,João Lima,São Paulo,SP,Monitores,Monitor LG 24 UltraWide,1,1199.00,cancelado,site
+1015,2026-07-15,Igor Batista,Campinas,SP,Informática,Notebook Acer Nitro 5,1,3299.00,pago,site
+1016,2026-07-17,Julia Andrade,Belo Horizonte,MG,Periféricos,Mouse Logitech MX,15,89.90,pago,marketplace
+1017,2026-07-18,Carla Dias,São Paulo,SP,Periféricos,Headset HyperX Cloud II,2,399.00,pago,app
+1018,2026-07-20,Lucas Moreira,Curitiba,PR,Monitores,Monitor Samsung Odyssey,5,1849.00,pago,site
+1019,2026-07-21,Bruno Rocha,Ribeirão Preto,SP,Informática,Notebook Dell Inspiron 15,2,2599.90,pendente,site
+1020,2026-07-22,Maria Souza,Campinas,SP,Periféricos,Teclado Redragon K552,4,249.00,pago,app
+1021,2026-07-23,Nathalia Freitas,São Paulo,SP,Informática,Notebook Acer Nitro 5,2,3299.00,pago,site
+1022,2026-07-24,Otávio Pinto,Campinas,SP,Periféricos,Webcam Logitech C920,12,449.00,pago,marketplace
+1023,2026-07-25,Priscila Gomes,Porto Alegre,RS,Monitores,Monitor LG 24 UltraWide,3,1199.00,pago,site
+1024,2026-07-26,Ana Costa,Campinas,SP,Periféricos,Webcam Logitech C920,2,449.00,cancelado,app
+1025,2026-07-27,Rafael Torres,Sorocaba,SP,Informática,Notebook Dell Inspiron 15,1,2599.90,pago,site
+1026,2026-07-28,Helena Prado,Santos,SP,Monitores,Monitor Samsung Odyssey,1,1849.00,pago,app
+1027,2026-07-29,Sabrina Melo,Rio de Janeiro,RJ,Periféricos,Headset HyperX Cloud II,9,399.00,pago,marketplace
+1028,2026-07-30,Maria Souza,Campinas,SP,Monitores,Monitor Samsung Odyssey,1,1849.00,pago,site
+1029,2026-07-30,Thiago Barros,Belo Horizonte,MG,Informática,Notebook Acer Nitro 5,1,3299.00,pendente,site
+1030,2026-07-31,João Lima,São Paulo,SP,Periféricos,Webcam Logitech C920,5,449.00,pago,app

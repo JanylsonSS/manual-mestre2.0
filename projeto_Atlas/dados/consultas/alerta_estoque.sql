@@ -1,0 +1,34 @@
+-- ═══════════════════════════════════════════════════════════════
+--  Relatório: Alerta de estoque
+--
+--  Responde: "O que vai faltar? Onde há capital parado?"
+--
+--  Parâmetros:
+--      :dias_analise    janela de vendas usada na média (padrão 90)
+--
+--  Colunas: sku, produto, categoria, estoque, unidades_vendidas,
+--           media_diaria, cobertura_dias, capital_parado, alerta
+-- ═══════════════════════════════════════════════════════════════
+
+-- TODO: escrever a consulta.
+--
+-- 💡 Cobertura em dias = estoque / (unidades_vendidas / :dias_analise)
+--    "Em quantos dias o estoque acaba, no ritmo atual?"
+--
+-- 💡 Classificação sugerida:
+--      'REPOR JA'   estoque = 0, ou cobertura < 15 dias
+--      'atencao'    cobertura entre 15 e 30 dias
+--      'ok'         cobertura entre 30 e 180 dias
+--      'excesso'    cobertura > 180 dias  (capital parado!)
+--      'sem giro'   nunca vendeu
+--
+-- ⚠️ Divisão por zero: produto sem venda tem media_diaria = 0.
+--    Trate ANTES de dividir — com CASE ou NULLIF.
+--
+-- ⚠️ Use LEFT JOIN a partir de `produtos`. Os produtos que nunca
+--    venderam são justamente os mais importantes deste relatório:
+--    são capital parado que ninguém está olhando.
+--
+-- 💭 Repare que este relatório responde a DUAS perguntas opostas —
+--    "o que vai faltar" e "o que está sobrando". Ambas custam
+--    dinheiro à empresa, em direções diferentes.

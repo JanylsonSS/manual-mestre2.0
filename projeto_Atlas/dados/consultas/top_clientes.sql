@@ -1,0 +1,37 @@
+-- ═══════════════════════════════════════════════════════════════
+--  Relatório: Melhores clientes (RFM simplificado)
+--
+--  Responde: "Quem são os clientes que importam, e quais estão
+--             prestes a ir embora?"
+--
+--  Parâmetros:
+--      :data_referencia   'AAAA-MM-DD' — o "hoje" do cálculo
+--      :limite
+--
+--  Colunas: nome, cidade, uf, segmento, frequencia, monetario,
+--           ticket_medio, ultima_compra, dias_sem_comprar,
+--           categorias_distintas, classificacao
+-- ═══════════════════════════════════════════════════════════════
+
+-- TODO: escrever a consulta.
+--
+-- 💡 RFM = Recência, Frequência, Monetário. É o modelo de
+--    segmentação mais usado em varejo, e cabe em uma consulta.
+--
+--    Recência   = dias desde a última compra
+--    Frequência = número de pedidos pagos
+--    Monetário  = valor total gasto
+--
+-- 💡 Recência no SQLite:
+--    CAST(julianday(:data_referencia) - julianday(MAX(data_pedido)) AS INTEGER)
+--
+-- 💡 Classificação sugerida (ajuste ao seu critério e documente):
+--      'Campeão'   frequencia >= 8  AND dias <= 30
+--      'Fiel'      frequencia >= 5
+--      'Em risco'  dias > 60
+--      'Novo'      apenas 1 pedido, dias <= 30
+--      'Regular'   o resto
+--
+-- ⚠️ Use LEFT JOIN a partir de `clientes` se quiser incluir quem
+--    nunca comprou. Decida: eles pertencem a este relatório ou a
+--    um relatório de "clientes inativos"? Documente a escolha.

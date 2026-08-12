@@ -1,0 +1,25 @@
+# Dependências do Atlas
+#
+# MÓDULO 01: nenhuma. Usamos só a biblioteca padrão do Python.
+#
+# Isso é proposital. Antes de usar pandas para agrupar um DataFrame, você
+# precisa entender o que ele faz por baixo — dicionário, laço e agregação.
+#
+# Instale mesmo assim, para pegar o hábito:
+#     pip install -r requirements.txt
+#
+# Este arquivo cresce a cada módulo:
+#
+#   M04  ->  pydantic
+#   M05  ->  psycopg[binary], SQLAlchemy, alembic, pymongo
+#   M06  ->  fastapi, uvicorn[standard], python-jose, passlib[bcrypt]
+#   M07  ->  httpx, redis, tenacity
+#   M10  ->  pandas, polars, pyarrow, beautifulsoup4, selenium
+#   M12  ->  pytest, pytest-cov
+#
+# ---------------------------------------------------------------------------
+# Ferramentas de desenvolvimento (opcionais, mas recomendadas já no M01).
+# Descomente se quiser usar:
+#
+# ruff==0.6.9          # linter + formatador, rápido
+# mypy==1.11.2         # verificação estática de type hints
