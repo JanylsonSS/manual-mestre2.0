@@ -145,7 +145,7 @@ correspondentes no currículo.
 
 | Etapa | Dor da Aurora | Entrega | Comecei | Terminei | ✔ |
 |-------|---------------|---------|:-------:|:--------:|:-:|
-| M01 | Ninguém sabe quanto vendemos por cidade | CLI de relatórios sobre CSV | | | ⬜ |
+| M01 | Ninguém sabe quanto vendemos por cidade | CLI de relatórios sobre CSV | 12/06/26 | | 🟡 |
 | M02 | Perdemos uma versão do script ontem | Git, `.gitignore`, scripts | | | ⬜ |
 | M03 | Os dados estão em 14 planilhas | Schema relacional + carga | | | ⬜ |
 | M04 | O script virou um monstro de 800 linhas | OOP + logging estruturado | | | ⬜ |
