@@ -20,7 +20,7 @@ from pathlib import Path
 #       Dica: Path(__file__) é este arquivo (src/atlas/config.py).
 #       Você precisa subir 3 níveis com .parent para chegar em projeto_Atlas/.
 
-DIR_RAIZ: Path = ...  # TODO
+DIR_RAIZ: Path = Path(__file__).parent.parent.parent # TODO
 
 # TODO: derivar os demais diretórios a partir de DIR_RAIZ usando o operador /
 #       DIR_DADOS           -> DIR_RAIZ / "dados"
@@ -28,21 +28,21 @@ DIR_RAIZ: Path = ...  # TODO
 #       DIR_DADOS_PROCESSADOS
 #       DIR_SAIDA
 
-DIR_DADOS: Path = ...  # TODO
-DIR_DADOS_BRUTOS: Path = ...  # TODO
-DIR_DADOS_PROCESSADOS: Path = ...  # TODO
-DIR_SAIDA: Path = ...  # TODO
+DIR_DADOS: Path = DIR_RAIZ / "dados"  # TODO
+DIR_DADOS_BRUTOS: Path = DIR_DADOS / "brutos" # TODO
+DIR_DADOS_PROCESSADOS: Path = DIR_DADOS / "processados"  # TODO
+DIR_SAIDA: Path = DIR_RAIZ / "saida"  # TODO
 
 # TODO: definir o arquivo de entrada padrão (usado quando o usuário não passa
 #       nenhum argumento na linha de comando).
-ARQUIVO_PADRAO: Path = ...  # TODO
+ARQUIVO_PADRAO: Path = DIR_DADOS_BRUTOS / "padrao.csv"  # TODO
 
 # TODO: definir os caminhos dos três arquivos de saída:
 #       SAIDA_RELATORIO_TXT, SAIDA_RELATORIO_JSON, SAIDA_REJEITADOS_CSV
 
-SAIDA_RELATORIO_TXT: Path = ...  # TODO
-SAIDA_RELATORIO_JSON: Path = ...  # TODO
-SAIDA_REJEITADOS_CSV: Path = ...  # TODO
+SAIDA_RELATORIO_TXT: Path = DIR_SAIDA / "relatorio.txt"  # TODO
+SAIDA_RELATORIO_JSON: Path = DIR_SAIDA / "relatorio.json"  # TODO
+SAIDA_REJEITADOS_CSV: Path = DIR_SAIDA / "relatorio.csv"  # TODO
 
 
 # ---------------------------------------------------------------------------
