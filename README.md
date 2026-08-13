@@ -37,7 +37,12 @@ Roadmap/
 ├── Modulo_02_Git/                  ← 4 notebooks
 ├── Modulo_03_SQL/                  ← 5 notebooks
 ├── Modulo_04_Python_Avancado/      ← 7 notebooks
-│   └── (05 a 10 conforme forem gerados)
+├── Modulo_05_PostgreSQL_MongoDB/   ← 4 notebooks
+├── Modulo_06_FastAPI/              ← 5 notebooks
+├── Modulo_07_APIs_na_Pratica/      ← 4 notebooks
+├── Modulo_08_Docker/               ← 4 notebooks
+├── Modulo_09_Deploy_CICD/          ← 4 notebooks
+│   └── (10 conforme for gerado)
 │
 └── projeto_Atlas/                  ← o projeto prático transversal
 ```
@@ -62,7 +67,7 @@ Dentro de cada módulo, os arquivos seguem a numeração `MM_AA_Nome.ipynb`, e o
 | 09 | **Deploy e CI/CD** | 4 | Servidores, proxy reverso, GitHub Actions, monitoramento |
 | 10 | **Engenharia de Dados** | 7 | Pandas, Polars, scraping, ETL, Airflow, Kafka |
 
-**Estado atual:** Módulos 01 a 04 prontos (22 notebooks, 1.639 células).
+**Estado atual:** Módulos 01 a 09 prontos (43 notebooks, 3.104 células).
 
 ---
 
@@ -170,12 +175,48 @@ Todos os notebooks foram executados célula a célula num simulador fiel ao
 Jupyter (usando o próprio transformador de entrada do IPython), e as saídas
 foram inspecionadas manualmente.
 
-Até aqui: **932 células de código, zero falhas**. Os comandos Git rodam de
-verdade em repositórios descartáveis, o SQL executa contra um SQLite real, e os
+Até aqui: **1.770 células de código, zero falhas**. Os comandos Git rodam de
+verdade em repositórios descartáveis, o SQL executa contra um SQLite real, o
+Alembic gera e aplica migrações de verdade, as APIs do M06 respondem a
+requisições HTTP reais, o M07 sobe servidores em `127.0.0.1` e fala com eles
+por **HTTP sobre socket** (para que timeout e recusa de conexão sejam de
+verdade), o `pytest` roda 47 testes reais, o M08 constrói containers ao vivo
+com `unshare` (os cinco namespaces do Linux, sem precisar de Docker), o M09
+sobe Gunicorn com múltiplos workers e um proxy reverso de verdade, e os
 benchmarks de memória e concorrência foram medidos, não estimados.
 
 Isso importa porque um manual em que uma célula não roda é um manual em que
 você vai perder uma hora achando que o erro é seu.
+
+### Bancos de dados: dois modos
+
+A partir do Módulo 05 entram PostgreSQL e MongoDB, que são **servidores**. Os
+notebooks detectam o que está disponível na sua máquina:
+
+| Modo | Quando | O que roda |
+|------|--------|------------|
+| 🐘🍃 **Real** | Você rodou `docker compose up -d` | Tudo |
+| 📦 **Fallback** | Sem Docker | SQLAlchemy sobre SQLite + `mongomock` |
+
+### Docker: modo duplo no Módulo 08
+
+Docker exige um *daemon*, que não roda dentro de todo ambiente. O Módulo 08 é
+explícito sobre o que é executado e o que não é:
+
+| | O que é | Como aparece |
+|---|---------|--------------|
+| ✅ **Executado** | Namespaces do Linux, análise de Dockerfile, validação de compose | Saída normal |
+| 📖 **Referência** | Comandos `docker ...` | Marcados com `[referência]` |
+
+E há um ganho no arranjo: em vez de decorar `docker run`, você **constrói um
+container à mão** com as chamadas de sistema que o Docker usa por baixo — e
+escreve um analisador de Dockerfile e um validador de compose que encontram os
+problemas antes do build. Se você tiver Docker instalado, os comandos executam
+de verdade.
+
+O fallback cobre a maior parte do conteúdo, e os trechos exclusivos de cada
+banco aparecem como blocos de referência com o SQL comentado. **Nenhuma célula
+falha em nenhum dos dois modos.**
 
 ---
 

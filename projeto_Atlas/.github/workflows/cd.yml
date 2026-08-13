@@ -1,0 +1,122 @@
+# ═══════════════════════════════════════════════════════════════
+#  CD do Atlas — Módulo 09
+#
+#  💭 ANTES DE IMPLEMENTAR, RESPONDA HONESTAMENTE:
+#
+#     A Aurora deve ter deploy AUTOMÁTICO em produção hoje?
+#
+#     ✅ Automatize se:  a suíte é confiável · o rollback é de um
+#        comando · existe homologação · o deploy é reversível
+#
+#     🔴 NÃO automatize se:  os testes são poucos · não há rollback ·
+#        a migração é destrutiva
+#
+#     A resposta honesta para quem está começando costuma ser
+#     "Delivery, não Deployment": o pipeline deixa TUDO pronto e uma
+#     pessoa aprova. É o que o `environment:` abaixo faz.
+#
+#     🎯 E a meta não é "nunca fazer deploy na sexta". É tornar o
+#        deploy tão seguro que o dia da semana deixe de importar.
+# ═══════════════════════════════════════════════════════════════
+
+name: CD
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+  # 💡 Permite disparar à mão pela interface do GitHub — útil para
+  #    republicar uma versão sem um commit novo.
+  workflow_dispatch:
+
+jobs:
+  publicar:
+    # 🔴 SÓ SE O CI PASSOU.
+    #    Sem esta linha, um CI vermelho publicaria assim mesmo —
+    #    `workflow_run` dispara em `completed`, não em `success`.
+    if: github.event.workflow_run.conclusion == 'success'
+
+    runs-on: ubuntu-latest
+
+    # 🔒 `environment` faz duas coisas de uma vez:
+    #    1. exige APROVAÇÃO MANUAL (se você configurar revisores)
+    #    2. restringe quais segredos este job enxerga
+    #
+    #    Configure em: Settings → Environments → producao
+    environment:
+      name: producao
+      url: https://atlas.aurora.com.br
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── Chave SSH ──
+      # TODO: escrever a chave a partir do segredo
+      #
+      #   🔴 NUNCA imprima a chave, nem "só para conferir". O
+      #      mascaramento do GitHub é substituição de texto EXATO:
+      #      qualquer transformação (base64, substring, rev) escapa.
+      #      Veja a demonstração na aula 09_03.
+      #
+      #   - name: Configurar SSH
+      #     run: |
+      #       mkdir -p ~/.ssh && chmod 700 ~/.ssh
+      #       echo "${{ secrets.CHAVE_DEPLOY }}" > ~/.ssh/id_ed25519
+      #       chmod 600 ~/.ssh/id_ed25519
+      #       ssh-keyscan -H "${{ secrets.SERVIDOR }}" >> ~/.ssh/known_hosts
+      #
+      #   ⚠️ `ssh-keyscan` ACEITA a chave do servidor sem verificar —
+      #      isso é vulnerável a intermediário na primeira conexão. Em
+      #      ambiente sério, fixe o fingerprint esperado num segredo.
+
+      # ── Deploy ──
+      # TODO: chamar o script do M09_02
+      #   - name: Deploy
+      #     run: ./scripts/deploy.sh producao
+      #     env:
+      #       SERVIDOR: ${{ secrets.SERVIDOR }}
+
+      # ── 🔴 Verificar que subiu ──
+      # TODO: um deploy que não verifica não é um deploy — é uma
+      #       esperança.
+      #
+      #   - name: Verificar a saúde
+      #     run: |
+      #       for i in $(seq 1 20); do
+      #         curl -fsS --max-time 3 https://atlas.aurora.com.br/saude && exit 0
+      #         sleep 3
+      #       done
+      #       exit 1
+
+      # ── 🔴 Reverter sozinho ──
+      # TODO: esta é a linha que transforma "o site está fora e não
+      #       sei por quê" em "voltou sozinho em 60 segundos".
+      #
+      #   - name: Rollback automático
+      #     if: failure()
+      #     run: ssh deploy@${{ secrets.SERVIDOR }} /opt/atlas/rollback.sh
+
+      # TODO (opcional): avisar a equipe
+      #   - name: Notificar
+      #     if: always()
+      #     run: |
+      #       curl -X POST "${{ secrets.WEBHOOK_SLACK }}" \
+      #         -d "{\"text\":\"deploy ${{ github.sha }}: ${{ job.status }}\"}"
+
+
+# ═══════════════════════════════════════════════════════════════
+#  💭 E se um segredo vazar no log?
+#
+#     ROTACIONE. Imediatamente.
+#
+#     Apagar o log NÃO basta: ele já foi indexado, pode ter sido
+#     copiado, e em repositório público qualquer um leu. O único
+#     conserto é invalidar a credencial e emitir outra.
+#
+#  🔒 MELHOR AINDA: OIDC.
+#     Em vez de guardar uma chave de longa duração, o GitHub prova a
+#     identidade do workflow para o provedor de nuvem, que devolve uma
+#     credencial temporária. O segredo que não existe não pode vazar.
+# ═══════════════════════════════════════════════════════════════

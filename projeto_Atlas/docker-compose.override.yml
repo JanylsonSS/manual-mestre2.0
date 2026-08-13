@@ -1,0 +1,86 @@
+# ═══════════════════════════════════════════════════════════════
+#  Sobreposição de DESENVOLVIMENTO
+#  Módulo 08
+#
+#  🔑 O Compose lê `docker-compose.yml` + `docker-compose.override.yml`
+#     AUTOMATICAMENTE quando você roda `docker compose up` sem `-f`.
+#
+#     Em produção você indica os arquivos explicitamente, e este é
+#     ignorado:
+#         docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+#  💭 É por isso que este é o lugar certo para tudo que só existe na
+#     SUA máquina: bind mount de código, `--reload`, portas expostas
+#     e ferramentas de depuração.
+#
+#  ⚠️ ESTE ARQUIVO É UM FRAGMENTO, não um compose completo.
+#     Auditá-lo sozinho dá falso positivo ("db sem image", "sem
+#     restart") — porque esses campos estão no arquivo base. O
+#     `scripts/auditar_containers.py` mescla antes de validar, que é
+#     o que o Compose também faz.
+# ═══════════════════════════════════════════════════════════════
+
+# 🔴 A LINHA `services:` ESTÁ COMENTADA DE PROPÓSITO.
+#
+#    Um `services:` sem nenhum serviço vira `services: null` em YAML,
+#    e o Compose recusa o arquivo inteiro com "services must be a
+#    mapping" — quebrando até o `up` dos bancos do M05.
+#
+#    Descomente-a junto com o primeiro serviço que você ativar.
+#
+# services:
+
+  # TODO: descomente conforme for implementando.
+  #
+  # api:
+  #   build:
+  #     target: construtor        # o estágio com as ferramentas de dev
+  #
+  #   volumes:
+  #     # 🔧 Bind mount do código: editou no host, mudou no container.
+  #     #    Com `--reload`, você recupera o ciclo de desenvolvimento
+  #     #    de sempre, mas rodando no ambiente do container.
+  #     - ./src:/app/src:ro
+  #     - ./tests:/app/tests:ro
+  #     #             ^^^ :ro = só leitura. O container não precisa
+  #     #                 escrever no seu código-fonte.
+  #
+  #   environment:
+  #     ATLAS_AMBIENTE: desenvolvimento
+  #
+  #   command: ["atlas.api.aplicacao:criar_app", "--factory",
+  #             "--host", "0.0.0.0", "--port", "8000", "--reload"]
+  #     #                                                ^^^^^^^^
+  #     # 🔴 `--reload` é SÓ para desenvolvimento. Ele vigia o sistema
+  #     #    de arquivos e reinicia o processo a cada salvamento — em
+  #     #    produção isso é desperdício e risco.
+  #
+  # 🔴 E NUNCA use bind mount de código em produção: a imagem deixa de
+  #    ser a fonte da verdade, e o que roda passa a depender do que
+  #    está no disco daquela máquina específica.
+
+  # ───────────────────────────────────────────────────────────
+  #  Bancos: em desenvolvimento, expor a porta é conveniente
+  # ───────────────────────────────────────────────────────────
+  # TODO: descomente se quiser usar DBeaver, psql ou Compass.
+  #
+  # postgres:
+  #   ports: ["127.0.0.1:5432:5432"]
+  #     # 🔒 Amarrado ao LOOPBACK. Assim só a sua máquina alcança —
+  #     #    `- "5432:5432"` publicaria em todas as interfaces, e num
+  #     #    notebook em rede pública isso é o seu banco na internet.
+  #
+  # mongo:
+  #   ports: ["127.0.0.1:27017:27017"]
+
+  # ───────────────────────────────────────────────────────────
+  #  Ferramentas que só existem em desenvolvimento
+  # ───────────────────────────────────────────────────────────
+  # TODO (opcional):
+  #
+  # adminer:
+  #   image: adminer:4.8.1
+  #   restart: unless-stopped
+  #   ports: ["127.0.0.1:8080:8080"]
+  #   depends_on:
+  #     postgres: {condition: service_healthy}

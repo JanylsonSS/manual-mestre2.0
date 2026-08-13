@@ -1,0 +1,123 @@
+# ═══════════════════════════════════════════════════════════════
+#  Atlas API — unit do systemd (Módulo 09)
+#
+#  Instalar:
+#      sudo cp infra/atlas.service /etc/systemd/system/
+#      sudo systemctl daemon-reload
+#      sudo systemctl enable --now atlas
+#
+#  Validar ANTES de instalar:
+#      systemd-analyze verify infra/atlas.service
+#
+#  ⚠️ Enquanto o `ExecStart` estiver como TODO, ele vai reclamar:
+#         Service has no ExecStart=... Refusing.
+#     Isso é esperado — o esqueleto não tem o comando ainda. Quando
+#     você preencher, a queixa some.
+#
+#  💭 Só use este arquivo se você NÃO estiver rodando em container.
+#     Com Docker Compose (M08), o `restart: unless-stopped` já faz o
+#     papel do systemd — e ter os dois é confusão garantida.
+# ═══════════════════════════════════════════════════════════════
+
+[Unit]
+Description=Atlas API — Aurora Comércio
+Documentation=https://github.com/aurora/atlas
+
+# TODO: declarar as dependências de partida.
+#   ⚠️ `After=` só define ORDEM, não garante que o serviço esteja
+#      PRONTO — é o mesmo problema do `depends_on` do M08. Se o
+#      Postgres estiver noutra máquina, isto não ajuda em nada: quem
+#      resolve é o retry da aplicação (M07).
+After=network-online.target
+Wants=network-online.target
+
+# 🔴 Estas duas ficam em [Unit], NÃO em [Service].
+#
+#    Sem elas, um erro na partida vira laço infinito de reinício:
+#    consome CPU, enche o log, e o serviço nunca aparece como
+#    quebrado. Com elas, o systemd desiste após 5 tentativas em 300s
+#    e marca `failed` — onde o seu monitoramento o encontra.
+#
+#    ⚠️ Se você as puser em [Service], o systemd IGNORA em silêncio:
+#         Unknown key name 'StartLimitIntervalSec' in section 'Service'
+#       Foi assim que este arquivo nasceu errado, e foi o
+#       `systemd-analyze verify` que apontou. Rode-o sempre.
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+# TODO: escolher o Type.
+#   simple  o systemd considera pronto assim que o processo nasce
+#   exec    espera o exec() dar certo (melhor que simple)
+#   notify  🔑 o processo AVISA quando está pronto de verdade
+#
+#   💡 `notify` é o único que espera de verdade — mas exige que a
+#      aplicação chame `sd_notify`. Comece com `exec`.
+Type=exec
+
+# 🔴 NUNCA `User=root`. Se a aplicação for comprometida, o atacante
+#    herda o que ela puder fazer.
+User=deploy
+Group=deploy
+
+WorkingDirectory=/opt/atlas/atual
+
+# 🔑 Os segredos vêm daqui, nunca do unit — este arquivo é versionado.
+#    E `/etc/atlas/atlas.env` deve ser `chmod 640`, dono root:deploy.
+EnvironmentFile=/etc/atlas/atlas.env
+
+# TODO: o comando de partida.
+#
+#   🔴 SEM `--reload`. Ele vigia o sistema de arquivos e reinicia o
+#      processo — desperdício e risco em produção.
+#
+#   🔴 `--forwarded-allow-ips` restrito ao proxy. Sem isso, qualquer
+#      cliente forja o próprio IP no `X-Forwarded-For` e derruba o seu
+#      limitador de taxa e o log de auditoria (aula 09_01).
+#
+#   💡 `WEB_CONCURRENCY` vem do EnvironmentFile: declare o número de
+#      workers, não o calcule. `os.cpu_count()` mente em container.
+#
+# ExecStart=/opt/atlas/atual/.venv/bin/gunicorn \
+#     atlas.api.aplicacao:criar_app \
+#     -k uvicorn.workers.UvicornWorker \
+#     -w ${WEB_CONCURRENCY} \
+#     -b 127.0.0.1:8000 \
+#     --graceful-timeout 30 \
+#     --forwarded-allow-ips 127.0.0.1 \
+#     --access-logfile - --error-logfile -
+#                     ↑ "-" = stdout, para o journalctl recolher (fator 11)
+
+# 🔑 Recarrega os workers SEM derrubar o serviço.
+ExecReload=/bin/kill -s HUP $MAINPID
+
+# ── Reinício automático ──
+Restart=always
+RestartSec=5
+# (os limites de tentativa ficam em [Unit], acima)
+
+# ── Encerramento gracioso (aula 09_01) ──
+KillSignal=SIGTERM
+# TODO: ajustar. 🔑 Precisa ser MAIOR que o `--graceful-timeout` do
+#   gunicorn, senão o systemd mata antes de ele terminar de encerrar
+#   com educação — e as requisições em andamento são cortadas.
+TimeoutStopSec=45
+
+# ── Endurecimento ──
+# 💭 Cada linha aqui reduz o que um invasor consegue fazer se
+#    conseguir executar código dentro do processo.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+
+# TODO: liberar só o que a aplicação precisa escrever.
+#   🔑 `ProtectSystem=strict` deixa TODO o sistema de arquivos em
+#      só-leitura. Sem esta linha, a aplicação não escreve nem em
+#      /opt/atlas/compartilhado.
+ReadWritePaths=/opt/atlas/compartilhado
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,254 @@
+# ═══════════════════════════════════════════════════════════════
+#  Atlas — ambiente completo
+#  Módulo 05 (bancos) · evoluído no Módulo 08 (API e Redis)
+#
+#      docker compose up -d        sobe tudo
+#      docker compose ps           confere (procure por `healthy`)
+#      docker compose logs -f api  acompanha
+#      docker compose down         derruba (MANTÉM os volumes)
+#      docker compose down -v      🔴 derruba E APAGA os dados
+#
+#  ⚠️ Este arquivo é para DESENVOLVIMENTO LOCAL.
+#     Produção é o Módulo 09 — lá entram segredos de verdade,
+#     proxy reverso, HTTPS e backup.
+#
+#  💭 Não há `version:` aqui. O Compose v2 a ignora — se você vir
+#     esse campo num tutorial, é material de antes de 2023.
+#
+#  🔧 Quando terminar, audite:  python scripts/auditar_containers.py
+# ═══════════════════════════════════════════════════════════════
+
+services:
+
+  # ───────────────────────────────────────────────────────────
+  #  A API — Módulo 08
+  # ───────────────────────────────────────────────────────────
+  # TODO: descomente e complete conforme for implementando.
+  #
+  # api:
+  #   build:
+  #     context: .
+  #     target: producao          # o estágio final do seu multi-stage
+  #   image: atlas-api:1.2.0      # 🔑 versão fixa, nunca latest
+  #   restart: unless-stopped
+  #   user: "1000:1000"           # 🔴 não-root (casa com o USER do Dockerfile)
+  #
+  #   ports:
+  #     - "127.0.0.1:8000:8000"   # 🔒 só a sua máquina, não a rede toda
+  #
+  #   env_file: [.env]            # 🔴 segredos vêm daqui, nunca do YAML
+  #   environment:
+  #     # ⚠️ `postgres`, `mongo` e `redis` são os NOMES DOS SERVIÇOS —
+  #     #    dentro da rede do compose eles viram hostname.
+  #     #
+  #     # 🔴 NUNCA `localhost`: dentro do container ele é o PRÓPRIO
+  #     #    container, onde não há banco nenhum. O erro é
+  #     #    "connection refused" e confunde, porque a mesma URL
+  #     #    funcionava fora.
+  #     ATLAS_DB_URL: postgresql+psycopg://atlas:${ATLAS_DB_PASSWORD:?defina no .env}@postgres:5432/atlas
+  #     ATLAS_MONGO_URI: mongodb://mongo:27017
+  #     ATLAS_REDIS_URL: redis://redis:6379/0
+  #     ATLAS_AMBIENTE: ${ATLAS_AMBIENTE:-desenvolvimento}
+  #     #                               ^^^^^^^^^^^^^^^^ valor padrão
+  #     #
+  #     # 💡 `${VAR:?mensagem}` faz o compose FALHAR se a variável não
+  #     #    existir. Sem isso, ele substitui por vazio EM SILÊNCIO e
+  #     #    você depura um "password authentication failed" que não
+  #     #    tem nada a ver com a senha.
+  #
+  #   depends_on:
+  #     # 🎯 A correção do `sleep 10`: esperar SAUDÁVEL, não INICIADO.
+  #     #    `depends_on: [postgres]` só garante que o container nasceu —
+  #     #    e o Postgres leva de 2 a 30 segundos para aceitar conexão.
+  #     postgres: {condition: service_healthy}
+  #     mongo:    {condition: service_healthy}
+  #     redis:    {condition: service_healthy}
+  #
+  #   healthcheck:
+  #     # ⚠️ NÃO use curl: ele não existe na imagem slim.
+  #     test: ["CMD", "python", "-c", "import httpx,sys; sys.exit(0 if httpx.get('http://127.0.0.1:8000/saude').status_code==200 else 1)"]
+  #     interval: 30s
+  #     timeout: 3s
+  #     start_period: 15s         # 🔑 carência: falhas aqui não contam
+  #     retries: 3
+
+  # ───────────────────────────────────────────────────────────
+  #  Redis — cache e idempotência (M07)
+  # ───────────────────────────────────────────────────────────
+  # TODO: descomente quando implementar o cache do M07.
+  #
+  # redis:
+  #   image: redis:7.4-alpine     # 🔑 versão fixa
+  #   restart: unless-stopped
+  #   command: ["redis-server", "--appendonly", "yes"]
+  #   volumes: ["atlas_redis_dados:/data"]
+  #   # 🔴 SEM `ports:` — a API o alcança pela rede interna.
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     retries: 5
+  #
+  # 💭 Redis precisa de volume? Depende do que você guarda nele.
+  #    Cache pode ser reconstruído; as chaves de IDEMPOTÊNCIA do M07,
+  #    não — perdê-las significa reprocessar webhooks já processados.
+
+  # ───────────────────────────────────────────────────────────
+  #  Migrações — roda, termina e sai
+  # ───────────────────────────────────────────────────────────
+  # TODO: descomente quando o Alembic estiver configurado.
+  #
+  # migracao:
+  #   image: atlas-api:1.2.0
+  #   profiles: ["ferramentas"]   # 💡 só sobe quando você pede
+  #   env_file: [.env]
+  #   environment:
+  #     ATLAS_DB_URL: postgresql+psycopg://atlas:${ATLAS_DB_PASSWORD}@postgres:5432/atlas
+  #   depends_on:
+  #     postgres: {condition: service_healthy}
+  #   command: ["alembic", "upgrade", "head"]
+  #   restart: "no"               # 🔑 é tarefa, não serviço
+  #
+  #   docker compose --profile ferramentas run --rm migracao
+  #
+  # 💡 Para a API só subir DEPOIS das migrações, use no `api`:
+  #        depends_on:
+  #          migracao: {condition: service_completed_successfully}
+
+  # ───────────────────────────────────────────────────────────
+  #  PostgreSQL — o transacional
+  # ───────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: atlas_postgres
+    restart: unless-stopped
+
+    environment:
+      # TODO: leia do .env em vez de fixar aqui.
+      #   A sintaxe ${VARIAVEL:-padrao} usa o .env e cai no padrão
+      #   se a variável não existir.
+      #
+      #   POSTGRES_USER:     ${ATLAS_DB_USER:-atlas}
+      #   POSTGRES_PASSWORD: ${ATLAS_DB_PASSWORD:-atlas}
+      #   POSTGRES_DB:       ${ATLAS_DB_NAME:-atlas}
+      #
+      # 🔴 Senha em arquivo versionado é aceitável APENAS porque este
+      #    banco só existe na sua máquina, sem dado real e sem porta
+      #    exposta à internet. Em qualquer outro cenário, é incidente.
+      POSTGRES_USER: atlas
+      POSTGRES_PASSWORD: atlas
+      POSTGRES_DB: atlas
+      # Acelera o boot em desenvolvimento (não use em produção)
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+
+    ports:
+      - "5432:5432"
+      # 💡 Se a porta 5432 já estiver ocupada por um Postgres local,
+      #    troque para "5433:5432" e ajuste a URL no .env
+
+    volumes:
+      # Dado persiste entre `down` e `up`
+      - atlas_postgres_dados:/var/lib/postgresql/data
+      # TODO (opcional): scripts em /docker-entrypoint-initdb.d/ rodam
+      #   UMA VEZ, na primeira criação do volume. Útil para criar
+      #   extensões ou roles:
+      # - ./dados/init:/docker-entrypoint-initdb.d:ro
+
+    # TODO: healthcheck — sem ele, `docker compose up` reporta "started"
+    #   antes de o banco aceitar conexão, e sua aplicação falha ao subir.
+    #
+    #   healthcheck:
+    #     test: ["CMD-SHELL", "pg_isready -U atlas -d atlas"]
+    #     interval: 5s
+    #     timeout: 3s
+    #     retries: 10
+    #     start_period: 10s
+
+  # ───────────────────────────────────────────────────────────
+  #  MongoDB — o catálogo
+  # ───────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    container_name: atlas_mongo
+    restart: unless-stopped
+
+    environment:
+      # TODO: mesma coisa — mova para o .env
+      MONGO_INITDB_ROOT_USERNAME: atlas
+      MONGO_INITDB_ROOT_PASSWORD: atlas
+      MONGO_INITDB_DATABASE: atlas_catalogo
+
+    ports:
+      - "27017:27017"
+
+    volumes:
+      - atlas_mongo_dados:/data/db
+
+    # TODO: healthcheck
+    #   healthcheck:
+    #     test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+    #     interval: 5s
+    #     timeout: 3s
+    #     retries: 10
+
+    # TODO (desafio extra): transações multi-documento exigem replica set.
+    #   Mesmo com uma instância só, dá para habilitar:
+    #     command: ["--replSet", "rs0", "--bind_ip_all"]
+    #   Depois, uma vez:
+    #     docker compose exec mongo mongosh --eval "rs.initiate()"
+
+  # ───────────────────────────────────────────────────────────
+  #  Ferramentas de administração (opcionais)
+  # ───────────────────────────────────────────────────────────
+  # TODO (opcional): interfaces web para inspecionar os bancos.
+  #   Suba só quando precisar:  docker compose --profile admin up -d
+  #
+  # adminer:
+  #   image: adminer:4
+  #   container_name: atlas_adminer
+  #   ports: ["8080:8080"]
+  #   profiles: ["admin"]
+  #   depends_on: [postgres]
+  #
+  # mongo-express:
+  #   image: mongo-express:1
+  #   container_name: atlas_mongo_express
+  #   ports: ["8081:8081"]
+  #   profiles: ["admin"]
+  #   environment:
+  #     ME_CONFIG_MONGODB_URL: mongodb://atlas:atlas@mongo:27017/
+  #   depends_on: [mongo]
+
+
+# ═══════════════════════════════════════════════════════════════
+#  Volumes nomeados
+# ═══════════════════════════════════════════════════════════════
+# 💭 Por que volume nomeado e não uma pasta do projeto?
+#
+#    Com `./dados:/var/lib/postgresql/data`, os arquivos do banco
+#    aparecem na sua pasta — e um `git add .` distraído versiona
+#    gigabytes de binário. Além disso, dá problema de permissão no
+#    Windows e no macOS.
+#
+#    Volume nomeado fica sob gestão do Docker. Para apagar:
+#        docker compose down -v      ⚠️ APAGA TODOS OS DADOS
+volumes:
+  atlas_postgres_dados:
+  atlas_mongo_dados:
+  # TODO (M08): atlas_redis_dados:
+
+
+# ═══════════════════════════════════════════════════════════════
+#  Comandos úteis
+# ═══════════════════════════════════════════════════════════════
+#   docker compose up -d                    sobe em segundo plano
+#   docker compose ps                       estado dos serviços
+#   docker compose logs -f postgres         acompanha os logs
+#   docker compose exec postgres psql -U atlas -d atlas
+#   docker compose exec mongo mongosh -u atlas -p atlas
+#   docker compose restart postgres
+#   docker compose down                     derruba (mantém os dados)
+#   docker compose down -v                  ⚠️ derruba E APAGA os dados
+#
+#   Porta ocupada?
+#     Linux/macOS:  lsof -i :5432
+#     Windows:      netstat -ano | findstr :5432
