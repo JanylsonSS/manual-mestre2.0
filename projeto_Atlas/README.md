@@ -1,8 +1,11 @@
 # Atlas — Sistema Central da Aurora Comércio
 
-> **Módulos 01–05 · Python + Git + SQL + OOP + Persistência poliglota**
+> **Módulos 01–09 · do primeiro script ao sistema em produção**
 > Estado atual: sistema orientado a objetos sobre **PostgreSQL** (transacional,
-> via SQLAlchemy e Alembic) e **MongoDB** (catálogo de produtos).
+> via SQLAlchemy e Alembic) e **MongoDB** (catálogo), exposto por uma **API
+> FastAPI** autenticada, integrado a serviços externos com resiliência e
+> coberto por uma **suíte de testes**, empacotado em **containers** e
+> publicado por um **pipeline** que testa, audita e reverte sozinho.
 
 ---
 
@@ -69,6 +72,58 @@ Ver **`ROTEIRO_M04.md`** para o passo a passo.
 **Critério de aceitação:** os números continuam idênticos, e `servicos.py` praticamente não muda. Se mudar muito, o desenho do M04 tinha vazamento.
 
 Ver **`ROTEIRO_M05.md`** para o passo a passo e **`docs/ARQUITETURA_DADOS.md`** para as decisões.
+
+### A dor do Módulo 06
+
+> *"O time do app precisa dos dados. Hoje eu exporto um CSV toda manhã e mando por e-mail — e ele já nasce desatualizado. Compras quer registrar entrada de estoque sem me pedir para abrir o banco. A diretoria quer ver margem, e isso não pode aparecer para mais ninguém."*
+
+### A entrega do Módulo 06
+
+**A Atlas API v1.** O sistema deixa de ter um único usuário no terminal e ganha uma porta HTTP: rotas com contrato declarado, validação na fronteira, autenticação por token, autorização por papel e documentação gerada a partir dos próprios tipos.
+
+**Critério de aceitação:** um pedido cujo terceiro item não tem estoque **não altera o estoque dos dois primeiros**. Tudo o mais é boa prática; isto é corretude.
+
+Ver **`ROTEIRO_M06.md`** para o passo a passo e **`docs/API.md`** para a referência e as decisões de projeto.
+
+### A dor do Módulo 07
+
+> *"A transportadora caiu 8 minutos e o nosso checkout caiu junto. Oito minutos sem vender. E o cliente paga o boleto e espera até 5 minutos para o pedido liberar, porque a gente pergunta ao gateway de 5 em 5 minutos. Ah — e precisamos mudar o cálculo de frete, mas ninguém quer mexer."*
+
+### A entrega do Módulo 07
+
+**O Atlas conectado ao mundo, e uma suíte que dá coragem.** Clientes HTTP com timeout, retry e disjuntor; webhooks validados por assinatura; cache com invalidação; e testes que rodam sem tocar a internet.
+
+**Critério de aceitação:** com a transportadora **completamente fora do ar**, o checkout continua funcionando — com frete estimado e aviso honesto. E cada teste da suíte passa também quando rodado sozinho.
+
+Ver **`ROTEIRO_M07.md`** para o passo a passo e **`docs/INTEGRACOES.md`** para as decisões.
+
+### A dor do Módulo 08
+
+> *"Contratamos uma desenvolvedora nova. Ela levou **dois dias** para conseguir rodar o Atlas. Python errado, PostgreSQL de outra versão, o Mongo não subia no Windows, e uma variável de ambiente que ninguém lembrava de documentar."*
+
+### A entrega do Módulo 08
+
+**O Atlas containerizado.** Imagem multi-stage rodando como usuário sem privilégio, `docker-compose` com os quatro serviços, healthchecks que substituem o `sleep 10`, e uma auditoria automática de Dockerfile e compose.
+
+**Critério de aceitação:** `git clone`, `cp .env.example .env`, `docker compose up -d`. Dois comandos e um arquivo, em qualquer sistema operacional.
+
+Ver **`ROTEIRO_M08.md`** para o passo a passo e **`docs/CONTAINERS.md`** para as decisões.
+
+### A dor do Módulo 09
+
+> *"Subir versão nova é um ritual. A gente marca para sexta à noite, três pessoas ficam de plantão, e uma vez em cada três dá errado. E a gente descobre que o site caiu quando um cliente liga."*
+
+### A entrega do Módulo 09
+
+**O Atlas em produção, sozinho.** Servidor com proxy reverso e HTTPS, deploy por symlink atômico com rollback em um comando, pipeline que testa e audita a cada push, e monitoramento que avisa antes do cliente.
+
+**Critério de aceitação:** um deploy ruim é revertido **automaticamente** em menos de 60 segundos — e cada portão do CI reprova quando você o quebra de propósito.
+
+Ver **`ROTEIRO_M09.md`**, **`docs/DEPLOY.md`** e **`docs/RUNBOOK.md`**.
+
+> 🎯 **A boa notícia:** seis dos oito requisitos para containerizar já estavam prontos — configuração por ambiente (M06), rota de saúde (M06), API sem estado (M06), dependências declaradas (M04), log estruturado (M04), segredos fora do código (M06). Você não os fez pensando em Docker; fez porque eram boas práticas.
+>
+> **Containerizar não é adaptar a aplicação ao Docker. É descobrir que uma aplicação bem construída já é containerizável.**
 
 ---
 
@@ -178,6 +233,15 @@ projeto_Atlas/
 ├── ROTEIRO_M03.md               ← implementação do M03 (SQL)
 ├── ROTEIRO_M04.md               ← implementação do M04 (OOP)
 ├── ROTEIRO_M05.md               ← implementação do M05 (Postgres + Mongo)
+├── ROTEIRO_M06.md               ← implementação do M06 (API)
+├── ROTEIRO_M07.md               ← implementação do M07 (integrações + testes)
+├── ROTEIRO_M08.md               ← implementação do M08 (containers)
+├── ROTEIRO_M09.md               ← implementação do M09 (deploy e CI/CD)
+├── .github/workflows/           ← M09: ci.yml e cd.yml
+├── infra/                       ← M09: systemd e nginx
+├── Dockerfile                   ← M08: imagem multi-stage
+├── .dockerignore                ← M08: 🔴 primeira linha é .env
+├── docker-compose.override.yml  ← M08: sobreposição de desenvolvimento
 ├── docker-compose.yml           ← M05: sobe os dois bancos
 ├── pyproject.toml               ← M04: metadados, deps e config das ferramentas
 ├── requirements.txt             ← legado; o pyproject é o padrão agora
@@ -192,7 +256,12 @@ projeto_Atlas/
 │   ├── MODELAGEM.md             ← M03: diagrama ER e decisões de modelagem
 │   ├── CSV_VS_SQL.md            ← M03: comparação medida entre as duas versões
 │   ├── REFATORACAO.md           ← M04: decisões de desenho e medições
-│   └── ARQUITETURA_DADOS.md     ← M05: por que dois bancos, e o custo disso
+│   ├── ARQUITETURA_DADOS.md     ← M05: por que dois bancos, e o custo disso
+│   ├── API.md                   ← M06: referência da API e decisões de projeto
+│   ├── INTEGRACOES.md           ← M07: resiliência, webhooks, cache, testes
+│   ├── CONTAINERS.md            ← M08: imagem, volumes, healthchecks
+│   ├── DEPLOY.md                ← M09: como publicar, e as decisões
+│   └── RUNBOOK.md               ← M09: 🔴 o que fazer quando quebrar
 │
 ├── scripts/                     ← M02: automações de shell
 │   ├── README.md
@@ -203,7 +272,12 @@ projeto_Atlas/
 │   ├── comparar_m03_m04.py      ← M04: prova de equivalência
 │   ├── migrar_para_poliglota.py ← M05: SQLite → Postgres + Mongo
 │   ├── subir.sh                 ← M05: sobe a infraestrutura
-│   └── derrubar.sh
+│   ├── derrubar.sh
+│   ├── api.sh      / api.ps1    ← M06: sobe a API em modo desenvolvimento
+│   ├── entrada.sh               ← M08: entrypoint do container
+│   ├── auditar_containers.py    ← M08: o portão de CI
+│   ├── deploy.sh                ← M09: com verificação e rollback
+│   └── rollback.sh              ← M09: 🔴 um comando
 │
 ├── dados/
 │   ├── brutos/
@@ -248,9 +322,64 @@ projeto_Atlas/
         ├── orm/                 ← M05: persistência relacional
         │   ├── modelos.py       ←   modelos SQLAlchemy 2.0
         │   └── sessao.py        ←   engine, pool e ciclo da sessão
-        └── mongo/               ← M05: persistência de documentos
-            └── catalogo.py      ←   repositório do catálogo
+        ├── mongo/               ← M05: persistência de documentos
+        │   └── catalogo.py      ←   repositório do catálogo
+        │
+        ├── api/                 ← M06: a porta HTTP do sistema
+        │   ├── aplicacao.py     ←   monta o FastAPI (fábrica criar_app)
+        │   ├── config.py        ←   configuração de INFRA, via ambiente
+        │   ├── seguranca.py     ←   hash de senha e token
+        │   ├── dependencias.py  ←   sessão, paginação, ordenação, papéis
+        │   ├── esquemas.py      ←   contratos Pydantic (rede)
+        │   └── rotas/
+        │       ├── autenticacao.py
+        │       ├── produtos.py
+        │       ├── pedidos.py
+        │       ├── relatorios.py
+        │       └── webhooks.py  ←   M07: recepção validada
+        │
+        └── integracoes/         ← M07: o mundo lá fora
+            ├── cliente_http.py  ←   base: timeout, retry, disjuntor
+            ├── transportadora.py ←  Veloz: cotação e rastreio
+            ├── gateway.py       ←   pagamento e validação de webhook
+            └── cache.py         ←   cache-aside sobre Redis
+
+tests/                           ← M07: a suíte que dá coragem
+├── conftest.py                  ←   fixtures (banco isolado, cliente)
+├── test_seguranca.py            ←   🔒 vazamento, autorização, injeção
+└── test_integracoes.py          ←   com respx: sem tocar a internet
 ```
+
+> 🎯 **`api/` vs `integracoes/` — a direção da seta.**
+>
+> | | `api/` | `integracoes/` |
+> |---|--------|----------------|
+> | Papel | você é o **servidor** | você é o **cliente** |
+> | Contrato | você define | você obedece |
+> | Falha | você escolhe quando | você sofre a dos outros |
+>
+> É a mudança de mentalidade do M07: como servidor você controla tudo;
+> como cliente você não controla **nada** — nem a disponibilidade, nem a
+> latência, nem o formato que o parceiro vai mudar sem avisar.
+
+> 🎯 **`orm/modelos.py` vs `api/esquemas.py` — a distinção que mais confunde.**
+>
+> | | `orm/modelos.py` | `api/esquemas.py` |
+> |---|---|---|
+> | Biblioteca | SQLAlchemy | Pydantic |
+> | Representa | Linha da tabela | Corpo da requisição/resposta |
+> | Vive em | Disco | Rede |
+> | Quem valida | O banco | A API |
+>
+> São **coisas diferentes** que por acaso têm campos parecidos. Tentar usar
+> um no lugar do outro é exatamente como o `custo` de um produto acaba
+> visível para o marketplace concorrente.
+
+> 💭 **E `atlas/config.py` vs `atlas/api/config.py`?** O primeiro guarda
+> constantes de **domínio** (cortes da curva ABC, formato de data) — iguais
+> em qualquer máquina. O segundo guarda **infraestrutura** (URL do banco,
+> chave secreta, CORS) — muda entre dev, homologação e produção, e parte
+> é segredo. Misturar os dois é como senha de banco vai parar no Git.
 
 > 💡 **Por que `metricas.py` (M01) e `repositorio.py` (M03) coexistem?**
 > Porque o M03 pede que você **compare** as duas implementações (ver
@@ -333,6 +462,95 @@ Ou pelos scripts: `./scripts/subir.sh` e `./scripts/derrubar.sh`.
 > 💡 **Sem Docker?** Os notebooks do M05 rodam em modo fallback (SQLite +
 > mongomock) e ensinam quase tudo. Mas o **projeto** exige os bancos reais —
 > é aqui que você aprende a operá-los.
+
+### Subindo a API (M06)
+
+```bash
+# 1. dependências
+pip install "fastapi[standard]" pydantic-settings pyjwt bcrypt python-multipart
+
+# 2. configuração — 🔴 gere a SUA chave
+cp .env.example .env
+python -c "import secrets; print(secrets.token_urlsafe(48))"
+#    cole o resultado em ATLAS_SECRET_KEY dentro do .env
+
+# 3. confirme que o .env não vai para o Git
+git check-ignore -v .env        # se não imprimir nada, PARE e conserte
+
+# 4. suba
+./scripts/api.sh                # ou: .\scripts\api.ps1
+```
+
+Depois abra **http://127.0.0.1:8000/docs**.
+
+Manualmente, sem o script:
+
+```bash
+uvicorn "atlas.api.aplicacao:criar_app" --factory --reload
+```
+
+Testando pelo terminal:
+
+```bash
+# login (form-data, exigência do OAuth2 — não é JSON)
+TOKEN=$(curl -s -X POST http://127.0.0.1:8000/auth/token \
+  -d "username=ana@aurora.com.br&password=SUA_SENHA" | jq -r .access_token)
+
+curl http://127.0.0.1:8000/produtos -H "Authorization: Bearer $TOKEN"
+curl http://127.0.0.1:8000/saude
+```
+
+> 🔴 **`--reload` é só para desenvolvimento.** Ele vigia o sistema de
+> arquivos e reinicia o processo a cada salvamento. O modo de produção
+> (workers, proxy reverso, HTTPS) é assunto do M09.
+
+> ⚠️ **Se o login devolver 500 com erro sobre `python-multipart`:** o
+> `OAuth2PasswordRequestForm` lê `form-data`, e isso exige esse pacote.
+> É a primeira pedra do caminho, e quase todo mundo tropeça nela.
+
+### Rodando os testes (M07)
+
+```bash
+pip install pytest pytest-cov respx fakeredis
+
+pytest                             # tudo
+pytest -m "not lento"              # o que roda em segundos
+pytest -m seguranca                # 🔒 só as verificações de segurança
+pytest -k "frete and not api"      # por nome
+pytest --lf                        # só o que falhou da última vez
+pytest -x                          # para na primeira falha
+pytest --cov=atlas --cov-report=term-missing
+```
+
+🔴 **A verificação que quase ninguém faz** — cada teste passa **sozinho**?
+
+```bash
+pytest --collect-only -q | grep :: | while read t; do
+  pytest -q --tb=no "$t" >/dev/null || echo "🔴 só passa acompanhado: $t"
+done
+```
+
+> Rodar a suíte duas vezes **não** detecta dependência de ordem: um estado
+> guardado num módulo Python é recriado a cada processo. O que denuncia é
+> rodar cada teste isolado. Um teste que só passa acompanhado é o que vai
+> deixar o CI vermelho um dia, sem ninguém ter mexido em nada relacionado.
+
+### Cache e integrações (M07)
+
+```bash
+# Redis (opcional — sem ele, os testes usam fakeredis)
+docker compose up -d redis
+docker compose exec redis redis-cli ping        # → PONG
+
+# auditoria rápida do próprio código
+grep -rn "httpx.Client(" src/ | grep -v timeout   # 🔴 deve sair VAZIO
+grep -rnE '(secret|senha|password|token|api_key)\s*=\s*["'"'"'][^"'"'"']{8,}' src/
+```
+
+> 🔴 **O primeiro `grep` é o mais importante do módulo.** Um `httpx.Client`
+> sem timeout espera para sempre — e uma requisição pendurada é um worker
+> perdido. Com 4 workers, bastam 4 para a API inteira parar de responder,
+> sem registrar um único erro: nada falhou, só nunca terminou.
 
 ### Qualidade de código (M04)
 
@@ -444,11 +662,11 @@ Onde este módulo se encaixa na jornada completa:
 | ✅ M02 | *"Perdemos uma versão do script ontem"* | Git, `.gitignore`, automações shell |
 | ✅ M03 | *"Os dados estão em 14 planilhas"* | Schema relacional (`.sql`) + carga |
 | ✅ M04 | *"O script virou um monstro de 800 linhas"* | Refatoração para OOP + logging |
-| **M05** | *"SQLite não aguenta; o catálogo muda toda semana"* | **PostgreSQL (ORM + Alembic) e MongoDB** ← você está aqui |
-| M06 | *"O time do app precisa acessar os dados"* | API Atlas v1 (FastAPI, JWT, OpenAPI) |
-| M07 | *"Precisamos falar com transportadora e gateway"* | Integrações resilientes, Redis, webhooks |
-| M08 | *"Configurar a máquina de um dev leva 2 dias"* | Dockerfile + docker-compose |
-| M09 | *"Subir versão nova é um ritual de risco"* | CI/CD (GitHub Actions) + proxy reverso |
+| ✅ M05 | *"SQLite não aguenta; o catálogo muda toda semana"* | PostgreSQL (ORM + Alembic) e MongoDB |
+| ✅ M06 | *"O time do app precisa acessar os dados"* | API Atlas v1 (FastAPI, JWT, OpenAPI) |
+| ✅ M07 | *"Precisamos falar com transportadora e gateway"* | Integrações resilientes, Redis, webhooks, testes |
+| ✅ M08 | *"Configurar a máquina de um dev leva 2 dias"* | Dockerfile + docker-compose + auditoria |
+| **M09** | *"Subir versão nova é um ritual de risco"* | **CI/CD + proxy reverso + monitoramento** ← você está aqui |
 | M10 | *"Decidimos com dados de 3 semanas atrás"* | ETL diário + orquestração |
 | M11 | *"Ninguém sabe por que o sistema é assim"* | ADRs e separação de camadas |
 | M12 | *"Temos medo de mexer no código"* | Suíte de testes (pytest) no CI |
@@ -491,6 +709,35 @@ Onde este módulo se encaixa na jornada completa:
 | `LEFT JOIN` trazendo menos linhas que o esperado | Condição da tabela da direita no `WHERE` | Mova a condição para o `ON` |
 | Migração duplicou dados | Faltou `ON CONFLICT` | Toda escrita da carga precisa ser UPSERT |
 | Texto com acento corrompido no `.db` | Encoding na leitura do CSV | `open(..., encoding="utf-8")` |
+| **M06** — `Form data requires "python-multipart"` | `OAuth2PasswordRequestForm` lê form-data | `pip install python-multipart` |
+| `GET /produtos/destaques` devolve 404 | Rota dinâmica declarada antes da estática | Declare `/produtos/destaques` **antes** de `/produtos/{sku}` |
+| `PATCH` apaga campos não enviados | Faltou `exclude_unset` | `dados.model_dump(exclude_unset=True)` |
+| `custo` aparece na resposta | Rota sem `response_model` | Toda rota que devolve dado declara o esquema de saída |
+| Validador de `sku` "não roda" | Restrição do `Field` roda antes | `@field_validator("sku", mode="before")` |
+| `QueuePool limit of size N reached` | `get_sessao` sem `finally: close()` | 🔴 `try: yield / finally: sessao.close()` |
+| `no such table` só nos testes | SQLite `:memory:` é por conexão | `poolclass=StaticPool` no engine de teste |
+| Front vê "blocked by CORS policy" num erro 500 | CORS não é o middleware mais externo | Adicione o `CORSMiddleware` **primeiro** |
+| Login diferencia usuário de senha errada | Mensagens distintas | 🔴 Levante o **mesmo** objeto de exceção nos dois casos |
+| Token continua válido após demissão | Só a assinatura foi verificada | Consulte o usuário no banco em `usuario_atual` |
+| Estoque some sem erro nenhum | Falta `rollback` no caminho de erro | Valide **tudo** antes de alterar **qualquer** coisa |
+| `alg: none` aceito no JWT | `decode` sem `algorithms=` | Passe `algorithms=["HS256"]` explicitamente |
+| Aplicação sobe com chave secreta vazia | Sem validação na `Config` | `Field(min_length=32)` e sem default utilizável |
+| **M07** — API trava sem erro nenhum | `httpx.Client` sem `timeout` | 🔴 timeout explícito em **todo** cliente |
+| Requisições acumulam até a API parar | Serviço externo lento, não fora do ar | `connect` curto + `read` com teto |
+| Cobrança duplicada | `POST` repetido sem `Idempotency-Key` | Só repita `POST` com chave |
+| A chave de idempotência não protege | Gerada a cada tentativa | Uma chave por **operação**, reusada nas tentativas |
+| Assinatura do webhook nunca bate | Corpo reserializado | `await requisicao.body()` — bytes **crus** |
+| O gateway reenvia para sempre | Você respondeu erro ao evento repetido | Responda `2xx`: "já recebi" é sucesso |
+| Evento processado várias vezes | Idempotência em `set` de memória | Redis (`SET NX EX`) ou tabela com `UNIQUE` |
+| Sincronização duplica registros | Paginação por offset em lista viva | Use cursor para sincronizar dados |
+| Laço infinito na madrugada | Paginação sem teto de páginas | `teto_paginas` + detecção de repetição |
+| Banco cai no horário de pico | Estouro de cache | Trava distribuída + TTL com jitter |
+| Dado velho servido para sempre | Só invalidação, sem TTL | Use os **dois** |
+| Executável aceito como CSV | Confiou na extensão/`Content-Type` | Valide **magic bytes** |
+| `no such table` só nos testes | SQLite `:memory:` sem `StaticPool` | `poolclass=StaticPool` |
+| Teste passa junto e falha sozinho | Estado vazando entre testes | Banco recriado por teste; escopo `function` |
+| Marcador ignorado em silêncio | Erro de digitação sem `--strict-markers` | Ative `--strict-markers` |
+| 100% de cobertura e bugs em produção | Testes que executam sem verificar | Cobertura mede linhas, não comportamento |
 
 ---
 

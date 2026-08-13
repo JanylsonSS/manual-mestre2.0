@@ -1,0 +1,177 @@
+# ═══════════════════════════════════════════════════════════════
+#  CI do Atlas — Módulo 09
+#
+#  Roda a cada push e a cada pull request.
+#
+#  🔑 A ORDEM DOS JOBS É POR CUSTO CRESCENTE.
+#     Lint leva 5 segundos e pega erro de digitação. Rodá-lo primeiro
+#     faz você receber a resposta em 20 segundos em vez de 4 minutos.
+#     É a mesma lógica de validar na fronteira (M06): falhe cedo e
+#     barato.
+#
+#  🔴 E A REGRA QUE VALE MAIS QUE O ARQUIVO INTEIRO:
+#     TESTE CADA PORTÃO. Quebre o código de propósito e confirme que
+#     ele reprova. Um portão que você nunca viu falhar é um portão em
+#     que você não deveria confiar.
+#
+#  💡 Para rodar localmente antes do push, use o `rodar_workflow()`
+#     da aula 09_03. Sem isso, cada ajuste aqui custa um commit, um
+#     push e três minutos — e o histórico vira "fix ci", "fix ci 2".
+# ═══════════════════════════════════════════════════════════════
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  ATLAS_AMBIENTE: teste
+  # 🔴 Sem isto, o Python pode servir bytecode VELHO quando o arquivo
+  #    muda mantendo o mesmo tamanho e a mesma data. O teste passa
+  #    testando o código antigo — sem erro, sem aviso.
+  #    Veja a demonstração na aula 09_03.
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+
+  # ═══════════════════════════════════════════════════════════════
+  #  1. Qualidade — 5 segundos, pega o erro bobo
+  # ═══════════════════════════════════════════════════════════════
+  qualidade:
+    runs-on: ubuntu-latest
+    steps:
+      # 🔑 `checkout` traz um clone LIMPO: sem __pycache__, sem .venv,
+      #    sem artefato de execução anterior. É metade da razão de o
+      #    CI ser confiável.
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # TODO: instalar as dependências de desenvolvimento
+      #   - run: pip install -e ".[dev]"
+
+      # TODO: rodar o ruff
+      #   - run: ruff check src/
+      #   - run: ruff format --check src/
+
+      # TODO: rodar o mypy
+      #   - run: mypy src/
+
+  # ═══════════════════════════════════════════════════════════════
+  #  2. 🔒 Segurança — antes dos testes: é rápido e é crítico
+  # ═══════════════════════════════════════════════════════════════
+  seguranca:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # TODO: falhar se houver segredo literal no código
+      #
+      #   🔑 O `!` na frente inverte o código de saída: o grep ACHAR
+      #      algo passa a ser FALHA.
+      #
+      #   - name: Nenhum segredo literal
+      #     run: |
+      #       ! grep -rnE '(SECRET|PASSWORD|SENHA|TOKEN|API_KEY)\w*\s*=\s*["'"'"'][^"'"'"']{8,}' \
+      #         src/ --include="*.py"
+      #
+      #   ⚠️ Cuidado com o padrão: `ATLAS_SECRET_KEY=...` tem `_KEY`
+      #      entre a palavra-chave e o `=`. Sem o `\w*`, ele escapa —
+      #      foi exatamente o que aconteceu na aula 08_02.
+
+      # TODO: falhar se o .env estiver versionado
+      #   - run: '! git ls-files --error-unmatch .env 2>/dev/null'
+
+      # TODO (recomendado): gitleaks, que varre o HISTÓRICO inteiro
+      #   - uses: gitleaks/gitleaks-action@v2
+      #
+      #   💭 Ele pega o segredo que você commitou e removeu depois —
+      #      que continua no histórico, e continua vazado.
+
+  # ═══════════════════════════════════════════════════════════════
+  #  3. Testes — o portão principal (M07)
+  # ═══════════════════════════════════════════════════════════════
+  testes:
+    needs: [qualidade, seguranca]
+    runs-on: ubuntu-latest
+
+    # TODO: se os testes precisarem de Postgres/Redis de verdade,
+    #   use `services:` — o GitHub sobe containers para o job:
+    #
+    #   services:
+    #     postgres:
+    #       image: postgres:16.4
+    #       env: {POSTGRES_PASSWORD: teste}
+    #       options: >-
+    #         --health-cmd pg_isready --health-interval 10s --health-retries 5
+    #
+    #   🔑 O `--health-cmd` é o mesmo `healthcheck` do M08 — e pelo
+    #      mesmo motivo: o job precisa ESPERAR o banco ficar pronto,
+    #      não só iniciado.
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # TODO: rodar a suíte
+      #   - run: pytest -q --tb=short -m "not integracao"
+      #
+      #   💡 `-m "not integracao"` deixa de fora o que depende de
+      #      serviço externo real (M07). Esses rodam num job diário
+      #      separado — teste de contrato não pode barrar um merge.
+
+      # TODO (M12): exigir cobertura mínima
+      #   - run: pytest --cov=atlas --cov-fail-under=70
+      #
+      #   ⚠️ Cobertura é DETECTOR DE BURACO, não certificado de
+      #      qualidade. Use como piso, nunca como meta — quando vira
+      #      meta, as pessoas escrevem testes que executam sem
+      #      verificar nada (M07).
+
+  # ═══════════════════════════════════════════════════════════════
+  #  4. Auditoria de containers (M08)
+  # ═══════════════════════════════════════════════════════════════
+  containers:
+    needs: [qualidade]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # TODO: rodar a sua auditoria
+      #   - run: python scripts/auditar_containers.py
+
+      # TODO (recomendado): hadolint, o linter consagrado de Dockerfile
+      #   - uses: hadolint/hadolint-action@v3
+      #     with: {dockerfile: Dockerfile}
+
+      # TODO: confirmar que a imagem constrói
+      #   - run: docker build -t atlas-api:ci .
+
+  # ═══════════════════════════════════════════════════════════════
+  #  5. Publicar a imagem — só na main
+  # ═══════════════════════════════════════════════════════════════
+  imagem:
+    needs: [testes, containers]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      # TODO: construir e publicar no registro
+      #
+      #   🔑 A imagem é etiquetada com o SHA do commit, não com
+      #      `latest`. É isso que torna possível promover EXATAMENTE
+      #      o artefato que passou nos testes (09_01) e reverter para
+      #      uma versão conhecida.
+      #
+      #   - run: |
+      #       docker build -t ghcr.io/aurora/atlas-api:${{ github.sha }} .
+      #       docker push  ghcr.io/aurora/atlas-api:${{ github.sha }}

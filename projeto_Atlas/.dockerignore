@@ -1,0 +1,109 @@
+# ═══════════════════════════════════════════════════════════════
+#  .dockerignore — o que NÃO entra no contexto do build
+#  Módulo 08
+#
+#  💭 Parece com o .gitignore, mas o objetivo é outro:
+#
+#       .gitignore    → o que não VERSIONAR
+#       .dockerignore → o que não ENVIAR para o daemon Docker
+#
+#     Um arquivo pode estar versionado e mesmo assim não ter nada
+#     que fazer dentro da imagem — os testes, por exemplo.
+#
+#  🔴 E o inverso é o perigoso: ter `.env` no .gitignore e NÃO ter
+#     aqui é uma das formas mais comuns de vazar credencial. O
+#     `COPY . /app` leva o arquivo para dentro de uma camada, e a
+#     camada vai para o registro.
+#
+#  Para medir o efeito:
+#      du -sh .                          # o contexto inteiro
+#      docker build . 2>&1 | head -1     # "Sending build context..."
+# ═══════════════════════════════════════════════════════════════
+
+# ───────────────────────── 🔴 SEGREDOS ─────────────────────────
+# Primeira seção de propósito: é a que não pode falhar.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+secrets/
+credenciais*.json
+
+# ─────────────────── Ambiente virtual ──────────────────────────
+# 💭 O .venv é do SEU sistema operacional, com binários compilados
+#    para a SUA máquina. Dentro do container ele é inútil no melhor
+#    caso, e quebra a imagem no pior.
+.venv/
+venv/
+ENV/
+env/
+.python-version
+
+# ─────────────────── Histórico do Git ──────────────────────────
+# Dezenas ou centenas de MB que a imagem nunca usa.
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# ─────────────────── Cache e artefatos do Python ───────────────
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+dist/
+build/
+.tox/
+
+# ─────────────────── Dados e saídas ────────────────────────────
+# 🔑 Estes vêm de VOLUME em tempo de execução, não da imagem.
+#    Dado dentro da imagem é dado que nasce velho.
+dados/brutos/
+dados/processados/
+dados/*.db
+dados/*.db-wal
+dados/*.db-shm
+saida/
+*.log
+*.jsonl
+
+# ─────────────────── Testes ────────────────────────────────────
+# 💭 Decisão: os testes NÃO vão para a imagem de produção.
+#    Se você quiser rodá-los dentro do container no CI, use o
+#    estágio `construtor` do multi-stage — ele ainda os tem.
+tests/
+conftest.py
+
+# ─────────────────── Desenvolvimento ───────────────────────────
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+notebooks/
+docs/
+*.md
+!README.md
+
+# ─────────────────── Docker (evita recursão) ───────────────────
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# ═══════════════════════════════════════════════════════════════
+#  TODO: rode `docker build .` e olhe a primeira linha da saída:
+#
+#      Sending build context to Docker daemon   1.4MB
+#
+#  Se aparecerem centenas de MB, algo grande escapou. Descubra o quê:
+#
+#      du -sh * .[!.]* | sort -rh | head -20
+# ═══════════════════════════════════════════════════════════════
