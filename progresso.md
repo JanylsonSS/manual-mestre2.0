@@ -9,7 +9,7 @@
 
 | # | Módulo | Aulas | Comecei | Terminei | Status |
 |---|--------|:-----:|:-------:|:--------:|:------:|
-| 01 | Python Fundamental | 6 | 12/06/26 | 12/06/26 | ✅ |
+| 01 | Python Fundamental | 6 | 12/06/26 |  | 🟡 |
 | 02 | Git | 4 | | | ⬜ |
 | 03 | SQL (SQLite) | 5 | | | ⬜ |
 | 04 | Python Avançado | 7 | | | ⬜ |
@@ -31,7 +31,7 @@
 | Aula | Comecei | Terminei | ✔ |
 |------|:-------:|:--------:|:-:|
 | `01_01` Python Básico | 12/06/26 | 12/06/26 | ✅ |
-| `01_02` Fluxos e Estruturas | | | ⬜ |
+| `01_02` Fluxos e Estruturas | 13/06/26 | | 🟡 Tuplas |
 | `01_03` Coleções e Comprehensions | | | ⬜ |
 | `01_04` Funções e Módulos | | | ⬜ |
 | `01_05` Arquivos, Erros e Debug | | | ⬜ |
