@@ -37,7 +37,8 @@ Roadmap/
 ├── Modulo_02_Git/                  ← 4 notebooks
 ├── Modulo_03_SQL/                  ← 5 notebooks
 ├── Modulo_04_Python_Avancado/      ← 7 notebooks
-│   └── (05 a 10 conforme forem gerados)
+├── Modulo_05_PostgreSQL_MongoDB/   ← 4 notebooks
+│   └── (06 a 10 conforme forem gerados)
 │
 └── projeto_Atlas/                  ← o projeto prático transversal
 ```
@@ -62,7 +63,7 @@ Dentro de cada módulo, os arquivos seguem a numeração `MM_AA_Nome.ipynb`, e o
 | 09 | **Deploy e CI/CD** | 4 | Servidores, proxy reverso, GitHub Actions, monitoramento |
 | 10 | **Engenharia de Dados** | 7 | Pandas, Polars, scraping, ETL, Airflow, Kafka |
 
-**Estado atual:** Módulos 01 a 04 prontos (22 notebooks, 1.639 células).
+**Estado atual:** Módulos 01 a 05 prontos (26 notebooks, 1.952 células).
 
 ---
 
@@ -170,12 +171,27 @@ Todos os notebooks foram executados célula a célula num simulador fiel ao
 Jupyter (usando o próprio transformador de entrada do IPython), e as saídas
 foram inspecionadas manualmente.
 
-Até aqui: **932 células de código, zero falhas**. Os comandos Git rodam de
-verdade em repositórios descartáveis, o SQL executa contra um SQLite real, e os
-benchmarks de memória e concorrência foram medidos, não estimados.
+Até aqui: **1.090 células de código, zero falhas**. Os comandos Git rodam de
+verdade em repositórios descartáveis, o SQL executa contra um SQLite real, o
+Alembic gera e aplica migrações de verdade, e os benchmarks de memória e
+concorrência foram medidos, não estimados.
 
 Isso importa porque um manual em que uma célula não roda é um manual em que
 você vai perder uma hora achando que o erro é seu.
+
+### Bancos de dados: dois modos
+
+A partir do Módulo 05 entram PostgreSQL e MongoDB, que são **servidores**. Os
+notebooks detectam o que está disponível na sua máquina:
+
+| Modo | Quando | O que roda |
+|------|--------|------------|
+| 🐘🍃 **Real** | Você rodou `docker compose up -d` | Tudo |
+| 📦 **Fallback** | Sem Docker | SQLAlchemy sobre SQLite + `mongomock` |
+
+O fallback cobre a maior parte do conteúdo, e os trechos exclusivos de cada
+banco aparecem como blocos de referência com o SQL comentado. **Nenhuma célula
+falha em nenhum dos dois modos.**
 
 ---
 

@@ -80,7 +80,7 @@
 | `05_02` SQLAlchemy | | | ⬜ |
 | `05_03` MongoDB | | | ⬜ |
 | `05_99` Lista de Exercícios | | | ⬜ |
-| 🏆 Projeto do módulo | | | ⬜ |
+| 🏆 Projeto — Atlas poliglota | | | ⬜ |
 
 ### Módulo 06 — FastAPI
 

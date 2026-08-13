@@ -22,7 +22,7 @@ build-backend = "setuptools.build_meta"
 # ═══════════════════════════════════════════════════════════════
 [project]
 name = "atlas"
-version = "0.4.0"
+version = "0.5.0"
 description = "Sistema central da Aurora Comércio"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -36,7 +36,13 @@ keywords = ["etl", "relatorios", "vendas"]
 #   M01–M03: nenhuma (só biblioteca padrão)
 #   M04: pydantic>=2.0  (validação na fronteira)
 dependencies = [
+    # M04
     # "pydantic>=2.0",
+    # M05 — TODO: descomente conforme for implementando
+    # "sqlalchemy>=2.0",
+    # "alembic>=1.13",
+    # "psycopg[binary]>=3.1",     # driver do PostgreSQL
+    # "pymongo>=4.6",             # driver do MongoDB
 ]
 
 [project.optional-dependencies]
@@ -47,6 +53,8 @@ dev = [
     # "pytest-cov>=5.0",
     # "mypy>=1.8",
     # "ruff>=0.6",
+    # M05 — para testar sem servidor:
+    # "mongomock>=4.1",           # MongoDB em memória
 ]
 
 [project.scripts]

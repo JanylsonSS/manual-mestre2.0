@@ -1,8 +1,8 @@
 # Atlas — Sistema Central da Aurora Comércio
 
-> **Módulos 01–04 · Python Fundamental + Git + SQL + Python Avançado**
-> Estado atual: sistema orientado a objetos, com modelos tipados, motor de
-> regras extensível e logging estruturado, sobre banco relacional SQLite.
+> **Módulos 01–05 · Python + Git + SQL + OOP + Persistência poliglota**
+> Estado atual: sistema orientado a objetos sobre **PostgreSQL** (transacional,
+> via SQLAlchemy e Alembic) e **MongoDB** (catálogo de produtos).
 
 ---
 
@@ -57,6 +57,18 @@ O Atlas deixa de ser um script com funções e vira um sistema: modelos tipados 
 **Critério de aceitação:** a saída dos relatórios é **idêntica** à do Módulo 03. Refatoração que muda comportamento não é refatoração.
 
 Ver **`ROTEIRO_M04.md`** para o passo a passo.
+
+### A dor do Módulo 05
+
+> *"O SQLite não aguenta mais. Quando o financeiro roda o fechamento e alguém tenta gravar um pedido, dá `database is locked`. E o catálogo mudou de novo: agora tem cadeira gamer, com altura regulável e peso suportado. Vou criar 40 colunas nulas?"*
+
+### A entrega do Módulo 05
+
+**Persistência poliglota.** O transacional (clientes, pedidos, itens) vai para o PostgreSQL, com SQLAlchemy como ORM e Alembic para migrações versionadas. O catálogo de produtos — cuja estrutura varia por categoria — vai para o MongoDB.
+
+**Critério de aceitação:** os números continuam idênticos, e `servicos.py` praticamente não muda. Se mudar muito, o desenho do M04 tinha vazamento.
+
+Ver **`ROTEIRO_M05.md`** para o passo a passo e **`docs/ARQUITETURA_DADOS.md`** para as decisões.
 
 ---
 
@@ -165,6 +177,8 @@ projeto_Atlas/
 ├── ROTEIRO_M02.md               ← implementação do M02 (Git)
 ├── ROTEIRO_M03.md               ← implementação do M03 (SQL)
 ├── ROTEIRO_M04.md               ← implementação do M04 (OOP)
+├── ROTEIRO_M05.md               ← implementação do M05 (Postgres + Mongo)
+├── docker-compose.yml           ← M05: sobe os dois bancos
 ├── pyproject.toml               ← M04: metadados, deps e config das ferramentas
 ├── requirements.txt             ← legado; o pyproject é o padrão agora
 ├── main.py                      ← ponto de entrada da CLI
@@ -177,7 +191,8 @@ projeto_Atlas/
 │   ├── RECUPERACAO.md           ← M02: seu manual de emergência do Git
 │   ├── MODELAGEM.md             ← M03: diagrama ER e decisões de modelagem
 │   ├── CSV_VS_SQL.md            ← M03: comparação medida entre as duas versões
-│   └── REFATORACAO.md           ← M04: decisões de desenho e medições
+│   ├── REFATORACAO.md           ← M04: decisões de desenho e medições
+│   └── ARQUITETURA_DADOS.md     ← M05: por que dois bancos, e o custo disso
 │
 ├── scripts/                     ← M02: automações de shell
 │   ├── README.md
@@ -185,7 +200,10 @@ projeto_Atlas/
 │   ├── rodar.sh    / rodar.ps1
 │   ├── limpar.sh   / limpar.ps1
 │   ├── verificar.sh/ verificar.ps1
-│   └── comparar_m03_m04.py      ← M04: prova de equivalência
+│   ├── comparar_m03_m04.py      ← M04: prova de equivalência
+│   ├── migrar_para_poliglota.py ← M05: SQLite → Postgres + Mongo
+│   ├── subir.sh                 ← M05: sobe a infraestrutura
+│   └── derrubar.sh
 │
 ├── dados/
 │   ├── brutos/
@@ -225,7 +243,13 @@ projeto_Atlas/
         ├── apresentacao.py      ← M04: formatadores × destinos
         ├── regras.py            ← M04: motor de precificação
         ├── observabilidade.py   ← M04: logging e instrumentação
-        └── cli.py               ← orquestração e argumentos
+        ├── cli.py               ← orquestração e argumentos
+        │
+        ├── orm/                 ← M05: persistência relacional
+        │   ├── modelos.py       ←   modelos SQLAlchemy 2.0
+        │   └── sessao.py        ←   engine, pool e ciclo da sessão
+        └── mongo/               ← M05: persistência de documentos
+            └── catalogo.py      ←   repositório do catálogo
 ```
 
 > 💡 **Por que `metricas.py` (M01) e `repositorio.py` (M03) coexistem?**
@@ -288,6 +312,27 @@ sqlite3 dados/atlas.db "EXPLAIN QUERY PLAN SELECT * FROM pedidos WHERE status='p
 > 💡 Para explorar visualmente, instale o [DB Browser for SQLite](https://sqlitebrowser.org/)
 > ou a extensão *SQLite Viewer* no VS Code. Poder clicar nas tabelas acelera
 > muito a depuração de consultas.
+
+### Subindo os bancos (M05)
+
+```bash
+cp .env.example .env               # e revise as senhas
+docker compose up -d               # PostgreSQL + MongoDB
+docker compose ps                  # ambos devem estar "healthy"
+
+alembic upgrade head               # aplica as migrações
+python scripts/migrar_para_poliglota.py
+
+# Inspecionando
+docker compose exec postgres psql -U atlas -d atlas
+docker compose exec mongo mongosh -u atlas -p atlas
+```
+
+Ou pelos scripts: `./scripts/subir.sh` e `./scripts/derrubar.sh`.
+
+> 💡 **Sem Docker?** Os notebooks do M05 rodam em modo fallback (SQLite +
+> mongomock) e ensinam quase tudo. Mas o **projeto** exige os bancos reais —
+> é aqui que você aprende a operá-los.
 
 ### Qualidade de código (M04)
 
@@ -398,8 +443,8 @@ Onde este módulo se encaixa na jornada completa:
 | ✅ M01 | *"Ninguém sabe quanto vendemos por cidade"* | Scripts CLI de relatórios sobre CSV |
 | ✅ M02 | *"Perdemos uma versão do script ontem"* | Git, `.gitignore`, automações shell |
 | ✅ M03 | *"Os dados estão em 14 planilhas"* | Schema relacional (`.sql`) + carga |
-| **M04** | *"O script virou um monstro de 800 linhas"* | **Refatoração para OOP + logging** ← você está aqui |
-| M05 | *"SQLite não aguenta; o catálogo muda toda semana"* | PostgreSQL (ORM + Alembic) e MongoDB |
+| ✅ M04 | *"O script virou um monstro de 800 linhas"* | Refatoração para OOP + logging |
+| **M05** | *"SQLite não aguenta; o catálogo muda toda semana"* | **PostgreSQL (ORM + Alembic) e MongoDB** ← você está aqui |
 | M06 | *"O time do app precisa acessar os dados"* | API Atlas v1 (FastAPI, JWT, OpenAPI) |
 | M07 | *"Precisamos falar com transportadora e gateway"* | Integrações resilientes, Redis, webhooks |
 | M08 | *"Configurar a máquina de um dev leva 2 dias"* | Dockerfile + docker-compose |
@@ -427,6 +472,14 @@ Onde este módulo se encaixa na jornada completa:
 | `AttributeError` ao agregar | Dimensão inexistente em `getattr` | Valide a dimensão na entrada de `por()` |
 | Tabela desalinhada | Emoji na célula (`len` 1, largura 2) | Use marcadores ASCII |
 | `ModuleNotFoundError: atlas` após o M04 | Pacote não instalado | `pip install -e .` |
+| `connection refused` na porta 5432 | Container não subiu | `docker compose ps` e `logs postgres` |
+| `port is already allocated` | Já há um Postgres local | Troque para `5433:5432` no compose |
+| `MappedAnnotationError` | Modelo definido em notebook | Modelos ORM precisam estar em **módulo** |
+| `DetachedInstanceError` | Objeto usado após a sessão fechar | Eager loading, ou converta para dict antes |
+| Listagem lenta e muitas consultas | **N+1** | `selectinload` nas relações |
+| `alembic` não detecta nada | Faltou `target_metadata` no `env.py` | Aponte para `Base.metadata` |
+| Migração apagou uma coluna renomeada | Autogenerate não detecta rename | **Sempre revise antes de aplicar** |
+| Pedido referencia produto inexistente | Não há FK entre os bancos | Rode a reconciliação (`verificar_integridade`) |
 | `git status` mostra `.venv/` | `.gitignore` ausente ou o venv já foi commitado | `git rm -r --cached .venv` |
 | Diff mostra o arquivo inteiro alterado | Fim de linha (CRLF vs LF) | O `.gitattributes` resolve; renormalize com `git add --renormalize .` |
 | `Permission denied` ao rodar `./scripts/setup.sh` | Falta bit de execução | `chmod +x scripts/*.sh` |

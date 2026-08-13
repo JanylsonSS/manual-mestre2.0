@@ -1,0 +1,158 @@
+# ═══════════════════════════════════════════════════════════════
+#  Atlas — infraestrutura local
+#  Módulo 05
+#
+#  Sobe PostgreSQL e MongoDB com um comando:
+#      docker compose up -d
+#
+#  ⚠️ Este arquivo é para DESENVOLVIMENTO LOCAL.
+#     Produção é o Módulo 09 — lá entram segredos de verdade,
+#     limites de recurso, rede isolada e backup.
+#
+#  💡 Você não precisa entender Docker agora (isso é o M08).
+#     Por enquanto, são quatro comandos:
+#         docker compose up -d        sobe
+#         docker compose ps           confere
+#         docker compose logs -f      acompanha
+#         docker compose down         derruba
+# ═══════════════════════════════════════════════════════════════
+
+services:
+
+  # ───────────────────────────────────────────────────────────
+  #  PostgreSQL — o transacional
+  # ───────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: atlas_postgres
+    restart: unless-stopped
+
+    environment:
+      # TODO: leia do .env em vez de fixar aqui.
+      #   A sintaxe ${VARIAVEL:-padrao} usa o .env e cai no padrão
+      #   se a variável não existir.
+      #
+      #   POSTGRES_USER:     ${ATLAS_DB_USER:-atlas}
+      #   POSTGRES_PASSWORD: ${ATLAS_DB_PASSWORD:-atlas}
+      #   POSTGRES_DB:       ${ATLAS_DB_NAME:-atlas}
+      #
+      # 🔴 Senha em arquivo versionado é aceitável APENAS porque este
+      #    banco só existe na sua máquina, sem dado real e sem porta
+      #    exposta à internet. Em qualquer outro cenário, é incidente.
+      POSTGRES_USER: atlas
+      POSTGRES_PASSWORD: atlas
+      POSTGRES_DB: atlas
+      # Acelera o boot em desenvolvimento (não use em produção)
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+
+    ports:
+      - "5432:5432"
+      # 💡 Se a porta 5432 já estiver ocupada por um Postgres local,
+      #    troque para "5433:5432" e ajuste a URL no .env
+
+    volumes:
+      # Dado persiste entre `down` e `up`
+      - atlas_postgres_dados:/var/lib/postgresql/data
+      # TODO (opcional): scripts em /docker-entrypoint-initdb.d/ rodam
+      #   UMA VEZ, na primeira criação do volume. Útil para criar
+      #   extensões ou roles:
+      # - ./dados/init:/docker-entrypoint-initdb.d:ro
+
+    # TODO: healthcheck — sem ele, `docker compose up` reporta "started"
+    #   antes de o banco aceitar conexão, e sua aplicação falha ao subir.
+    #
+    #   healthcheck:
+    #     test: ["CMD-SHELL", "pg_isready -U atlas -d atlas"]
+    #     interval: 5s
+    #     timeout: 3s
+    #     retries: 10
+    #     start_period: 10s
+
+  # ───────────────────────────────────────────────────────────
+  #  MongoDB — o catálogo
+  # ───────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    container_name: atlas_mongo
+    restart: unless-stopped
+
+    environment:
+      # TODO: mesma coisa — mova para o .env
+      MONGO_INITDB_ROOT_USERNAME: atlas
+      MONGO_INITDB_ROOT_PASSWORD: atlas
+      MONGO_INITDB_DATABASE: atlas_catalogo
+
+    ports:
+      - "27017:27017"
+
+    volumes:
+      - atlas_mongo_dados:/data/db
+
+    # TODO: healthcheck
+    #   healthcheck:
+    #     test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+    #     interval: 5s
+    #     timeout: 3s
+    #     retries: 10
+
+    # TODO (desafio extra): transações multi-documento exigem replica set.
+    #   Mesmo com uma instância só, dá para habilitar:
+    #     command: ["--replSet", "rs0", "--bind_ip_all"]
+    #   Depois, uma vez:
+    #     docker compose exec mongo mongosh --eval "rs.initiate()"
+
+  # ───────────────────────────────────────────────────────────
+  #  Ferramentas de administração (opcionais)
+  # ───────────────────────────────────────────────────────────
+  # TODO (opcional): interfaces web para inspecionar os bancos.
+  #   Suba só quando precisar:  docker compose --profile admin up -d
+  #
+  # adminer:
+  #   image: adminer:4
+  #   container_name: atlas_adminer
+  #   ports: ["8080:8080"]
+  #   profiles: ["admin"]
+  #   depends_on: [postgres]
+  #
+  # mongo-express:
+  #   image: mongo-express:1
+  #   container_name: atlas_mongo_express
+  #   ports: ["8081:8081"]
+  #   profiles: ["admin"]
+  #   environment:
+  #     ME_CONFIG_MONGODB_URL: mongodb://atlas:atlas@mongo:27017/
+  #   depends_on: [mongo]
+
+
+# ═══════════════════════════════════════════════════════════════
+#  Volumes nomeados
+# ═══════════════════════════════════════════════════════════════
+# 💭 Por que volume nomeado e não uma pasta do projeto?
+#
+#    Com `./dados:/var/lib/postgresql/data`, os arquivos do banco
+#    aparecem na sua pasta — e um `git add .` distraído versiona
+#    gigabytes de binário. Além disso, dá problema de permissão no
+#    Windows e no macOS.
+#
+#    Volume nomeado fica sob gestão do Docker. Para apagar:
+#        docker compose down -v      ⚠️ APAGA TODOS OS DADOS
+volumes:
+  atlas_postgres_dados:
+  atlas_mongo_dados:
+
+
+# ═══════════════════════════════════════════════════════════════
+#  Comandos úteis
+# ═══════════════════════════════════════════════════════════════
+#   docker compose up -d                    sobe em segundo plano
+#   docker compose ps                       estado dos serviços
+#   docker compose logs -f postgres         acompanha os logs
+#   docker compose exec postgres psql -U atlas -d atlas
+#   docker compose exec mongo mongosh -u atlas -p atlas
+#   docker compose restart postgres
+#   docker compose down                     derruba (mantém os dados)
+#   docker compose down -v                  ⚠️ derruba E APAGA os dados
+#
+#   Porta ocupada?
+#     Linux/macOS:  lsof -i :5432
+#     Windows:      netstat -ano | findstr :5432
