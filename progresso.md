@@ -91,7 +91,7 @@
 | `06_03` Arquitetura e Banco | | | ⬜ |
 | `06_04` Segurança e Filtros | | | ⬜ |
 | `06_99` Lista de Exercícios | | | ⬜ |
-| 🏆 Projeto do módulo | | | ⬜ |
+| 🏆 Projeto — a API do Atlas | | | ⬜ |
 
 ### Módulo 07 — APIs na Prática
 
@@ -101,7 +101,7 @@
 | `07_02` Design e Funcionalidades | | | ⬜ |
 | `07_03` Testes | | | ⬜ |
 | `07_99` Lista de Exercícios | | | ⬜ |
-| 🏆 Projeto do módulo | | | ⬜ |
+| 🏆 Projeto — integrações e suíte de testes | | | ⬜ |
 
 ### Módulo 08 — Docker
 
@@ -111,7 +111,7 @@
 | `08_02` Criando Imagens | | | ⬜ |
 | `08_03` Orquestração | | | ⬜ |
 | `08_99` Lista de Exercícios | | | ⬜ |
-| 🏆 Projeto do módulo | | | ⬜ |
+| 🏆 Projeto — Atlas containerizado | | | ⬜ |
 
 ### Módulo 09 — Deploy e CI/CD
 
@@ -121,7 +121,7 @@
 | `09_02` Deploy Prático | | | ⬜ |
 | `09_03` Pipelines e Monitoramento | | | ⬜ |
 | `09_99` Lista de Exercícios | | | ⬜ |
-| 🏆 Projeto do módulo | | | ⬜ |
+| 🏆 Projeto — deploy automatizado e rollback | | | ⬜ |
 
 ### Módulo 10 — Engenharia de Dados
 
@@ -134,14 +134,15 @@
 | `10_05` Arquitetura ETL e Qualidade | | | ⬜ |
 | `10_06` Filas, Mensageria e Orquestração | | | ⬜ |
 | `10_99` Lista de Exercícios | | | ⬜ |
-| 🏆 Projeto do módulo | | | ⬜ |
+| 🏆 Projeto — o pipeline de dados do Atlas | | | ⬜ |
 
 ---
 
 ## Projeto Atlas — evolução
 
-O projeto transversal tem 13 etapas. As três últimas não têm notebooks
-correspondentes no currículo.
+O projeto transversal tem 13 etapas. **As três últimas (M11–M13) não têm
+notebooks** — o currículo de aulas encerra no M10, e daqui em diante o
+trabalho é sobre o sistema que você construiu.
 
 | Etapa | Dor da Aurora | Entrega | Comecei | Terminei | ✔ |
 |-------|---------------|---------|:-------:|:--------:|:-:|
@@ -154,10 +155,34 @@ correspondentes no currículo.
 | M07 | Precisamos falar com transportadora e gateway | Integrações + cache | | | ⬜ |
 | M08 | Configurar a máquina de um dev leva 2 dias | Containerização | | | ⬜ |
 | M09 | Subir versão nova é um ritual de risco | CI/CD + proxy reverso | | | ⬜ |
-| M10 | Decidimos com dados de 3 semanas atrás | ETL diário + orquestração | | | ⬜ |
-| M11 | Ninguém sabe por que o sistema é assim | ADRs + camadas | | | ⬜ |
-| M12 | Temos medo de mexer no código | Suíte de testes no CI | | | ⬜ |
-| M13 | — | Atlas 1.0 consolidado | | | ⬜ |
+| M10 | Decidimos com dados de 3 semanas atrás | Pipeline diário + lago + qualidade | | | ⬜ |
+| M11 | Ninguém sabe por que o sistema é assim | ADRs + camadas verificadas no CI | | | ⬜ |
+| M12 | Temos medo de mexer no código | Suíte por camada + teste de mutação | | | ⬜ |
+| M13 | Que versão está em produção? | Atlas 1.0: changelog + portão de release | | | ⬜ |
+
+---
+
+## Checagem de fim de módulo
+
+Antes de marcar um módulo como ✅, cinco perguntas. Elas valem mais que
+a data preenchida.
+
+| | Pergunta |
+|---|---|
+| 1 | Rodei a lista de exercícios **inteira**, sem olhar resposta? |
+| 2 | O `ROTEIRO_MXX.md` do Atlas está com todos os ✅ marcados? |
+| 3 | As baterias de aceitação do módulo passam no **meu** projeto? |
+| 4 | 🔑 Consigo explicar para outra pessoa **por que** cada decisão foi tomada? |
+| 5 | 🔑 Vi o portão do módulo **reprovar** quando quebrei algo de propósito? |
+
+> 💭 A quinta é a mais importante, e é a ideia que atravessa o manual
+> inteiro: **toda salvaguarda precisa ser vista falhando pelo menos uma
+> vez.** Até lá, ela é uma esperança com aparência de garantia.
+>
+> 💭 A quarta é a que separa "terminei o módulo" de "aprendi o módulo".
+> Se você sabe *que* precisa de `poolclass=StaticPool` mas não sabe
+> *por quê*, você decorou uma linha — e ela não vai te ajudar no dia em
+> que o problema aparecer com outra cara.
 
 ---
 

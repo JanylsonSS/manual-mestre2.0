@@ -60,6 +60,24 @@ jobs:
       # TODO: rodar o mypy
       #   - run: mypy src/
 
+      # TODO (M11): 🔑 o portão de arquitetura
+      #   - name: Verificar camadas
+      #     run: python scripts/verificar_camadas.py
+      #
+      # É o passo mais barato do CI inteiro — não instala nada, não
+      # sobe serviço, lê os imports com `ast` e sai em milissegundos.
+      # E é o único que impede a arquitetura de apodrecer em silêncio.
+      #
+      # 🔴 Depois de adicionar, PLANTE UMA VIOLAÇÃO e confirme que o
+      #    CI fica vermelho:
+      #
+      #      # em src/atlas/api/rotas/produtos.py
+      #      from atlas.repositorio import buscar_produto
+      #
+      #    Um portão que você nunca viu reprovar não é um portão.
+      #    Você aprendeu isso no M09, com o segredo que passou pelo
+      #    check estático porque a palavra estava no arquivo.
+
   # ═══════════════════════════════════════════════════════════════
   #  2. 🔒 Segurança — antes dos testes: é rápido e é crítico
   # ═══════════════════════════════════════════════════════════════
@@ -132,6 +150,58 @@ jobs:
       #      qualidade. Use como piso, nunca como meta — quando vira
       #      meta, as pessoas escrevem testes que executam sem
       #      verificar nada (M07).
+
+      # TODO (M12): escolha o piso ABAIXO da cobertura que você já
+      #   tem, e suba aos poucos. Piso acima do atual deixa o CI
+      #   vermelho no dia 1, e a primeira reação da equipe é baixar o
+      #   piso — aí ele nunca mais sobe.
+
+      # TODO (M12): matriz de versões, se você suporta mais de uma
+      #   strategy:
+      #     fail-fast: false
+      #     matrix: {python: ["3.10", "3.12"]}
+      #
+      #   ⚠️ `fail-fast: false` importa: com o padrão `true`, a
+      #      primeira versão que falha cancela as outras — e você
+      #      descobre um problema por vez, num ciclo de CI por vez.
+
+  # ═══════════════════════════════════════════════════════════════
+  #  3b. 🔑 Auditoria da suíte (M12) — semanal, NÃO a cada push
+  # ═══════════════════════════════════════════════════════════════
+  #
+  # Este job responde a pergunta que cobertura não responde:
+  #
+  #     "se eu quebrar uma linha, algum teste fica vermelho?"
+  #
+  # 🔴 Ele NÃO entra no CI de push. Mutação leva de minutos a horas, e
+  #    transformaria cada PR numa espera — o que faria alguém desligar
+  #    o job em três semanas.
+  #
+  #    O CI de push carrega a suíte e o piso de cobertura. Este job é
+  #    a auditoria periódica que diz se aquele piso significa alguma
+  #    coisa.
+  #
+  # TODO: descomente e ajuste. Repare que ele precisa de `on: schedule`
+  #       no topo do arquivo (ou mova para um workflow separado, que é
+  #       o mais limpo: .github/workflows/auditoria.yml).
+  #
+  # auditoria_suite:
+  #   if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-python@v5
+  #       with: {python-version: "3.12"}
+  #
+  #     - name: Isolamento — cada teste sozinho
+  #       run: python scripts/testar_os_testes.py --ordem
+  #
+  #     - name: Mutação
+  #       run: python scripts/testar_os_testes.py --minimo 60
+  #
+  # 🔑 E `workflow_dispatch` no gatilho: você vai querer rodar isto
+  #    sob demanda depois de mexer numa camada crítica, sem esperar
+  #    o domingo.
 
   # ═══════════════════════════════════════════════════════════════
   #  4. Auditoria de containers (M08)

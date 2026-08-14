@@ -161,3 +161,40 @@ echo | openssl s_client -connect atlas.aurora.com.br:443 2>/dev/null \
      E o mais importante: quem decide comunicar o cliente, e a partir
      de quanto tempo de indisponibilidade.
 -->
+
+---
+
+## O pipeline de dados falhou (M10)
+
+Este runbook cobre a **API fora do ar**. Falha do pipeline é outro
+tipo de incidente, e tem outro documento: **`PIPELINE.md`**, seção 5.
+
+A diferença importa mais do que parece:
+
+| | API fora | Pipeline falhou |
+|---|---|---|
+| Quem percebe | o cliente, agora | ninguém, até de manhã |
+| Urgência | 🔴 imediata | alta, mas você tem horas |
+| Pior erro | demorar a agir | 🔴 **agir rápido demais** |
+
+> 💭 **Por que a pressa é o inimigo aqui.** A API fora é visível e
+> urgente: reverta primeiro, entenda depois. O pipeline é o oposto —
+> o painel continua mostrando o dado de ontem, e ninguém está
+> esperando. Forçar o portão às 3h para "resolver logo" publica um
+> número errado que vai circular numa reunião antes que alguém note.
+>
+> Relatório de ontem com data de ontem é um inconveniente.
+> Relatório de hoje com número errado é uma decisão errada.
+
+**Só isto, agora:**
+
+```bash
+# o pipeline chegou a rodar?
+journalctl -u atlas-pipeline -n 100 --no-pager
+
+# qual verificação reprovou, e com que números?
+grep portao /var/log/atlas/pipeline.jsonl | tail -5
+```
+
+Depois abra `PIPELINE.md` § 5 e siga. **Não rode com `--forcar`** sem
+ter entendido por que o portão reprovou.

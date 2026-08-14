@@ -85,6 +85,30 @@ logs/
 !dados/indices.sql
 !dados/consultas/*.sql
 
+# ── Lago de dados (M10) ──────────────────────────────────────
+# O lago é DADO, não código. Ele não cabe no Git e não deveria
+# tentar caber: um parquet de 200 MB por dia enche o repositório
+# em duas semanas, e o Git guarda cada versão inteira de novo.
+#
+# Versionamos só a ESTRUTURA de pastas, via .gitkeep.
+dados/lago/**
+!dados/lago/LEIA-ME.md
+!dados/lago/*/
+!dados/lago/*/.gitkeep
+
+# 🔴 A quarentena pode conter DADO PESSOAL — ela guarda a linha
+#    original inteira, e a linha original tem nome, e-mail, às
+#    vezes CPF. Commitar quarentena é vazar dado de cliente num
+#    repositório, e o Git nunca esquece: apagar num commit
+#    seguinte não remove do histórico.
+dados/lago/quarentena/**
+
+# ⚠️ `estado/` guarda as marcas d'água. Parece inofensivo e é
+#    tentador versionar "para não perder". Não versione: a marca
+#    da SUA máquina de teste sobrescreveria a de produção num
+#    deploy, e o pipeline reprocessaria (ou pularia) meses.
+dados/lago/estado/**
+
 # ── Jupyter ──────────────────────────────────────────────────
 .ipynb_checkpoints/
 */.ipynb_checkpoints/*

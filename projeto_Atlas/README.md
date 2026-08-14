@@ -1,11 +1,13 @@
 # Atlas — Sistema Central da Aurora Comércio
 
-> **Módulos 01–09 · do primeiro script ao sistema em produção**
+> **Módulos 01–13 · do primeiro script ao Atlas 1.0**
 > Estado atual: sistema orientado a objetos sobre **PostgreSQL** (transacional,
 > via SQLAlchemy e Alembic) e **MongoDB** (catálogo), exposto por uma **API
 > FastAPI** autenticada, integrado a serviços externos com resiliência e
-> coberto por uma **suíte de testes**, empacotado em **containers** e
-> publicado por um **pipeline** que testa, audita e reverte sozinho.
+> coberto por uma **suíte de testes**, empacotado em **containers**,
+> publicado por um **pipeline** que testa, audita e reverte sozinho, e
+> alimentado por um **pipeline de dados** que roda toda madrugada, confere
+> o que produziu e não publica número em que não confia.
 
 ---
 
@@ -120,6 +122,89 @@ Ver **`ROTEIRO_M08.md`** para o passo a passo e **`docs/CONTAINERS.md`** para as
 **Critério de aceitação:** um deploy ruim é revertido **automaticamente** em menos de 60 segundos — e cada portão do CI reprova quando você o quebra de propósito.
 
 Ver **`ROTEIRO_M09.md`**, **`docs/DEPLOY.md`** e **`docs/RUNBOOK.md`**.
+
+### A dor do Módulo 10
+
+> *"O relatório de faturamento por cidade demora 40 segundos, e quando
+> alguém abre, o site fica lento. O parceiro manda um CSV todo dia e
+> alguém baixa e roda um script na própria máquina. E o número do
+> painel não bate com o do financeiro — ninguém sabe qual está certo."*
+
+### A entrega do Módulo 10
+
+**O outro lado do sistema.** Um pipeline que roda toda madrugada, lê de
+três origens sem tocar no banco que atende o cliente, guarda o dado
+como chegou, separa o que não presta sem jogar fora, confere seis
+coisas antes de publicar — e **não publica** se não confiar.
+
+**Critério de aceitação:** rodar o mesmo dia duas vezes produz o mesmo
+ouro, byte a byte. E o portão de qualidade **reprova** quando você
+estraga o dado de propósito — se ele nunca reprovou, ele não existe.
+
+Ver **`ROTEIRO_M10.md`**, **`docs/PIPELINE.md`** e **`docs/METRICAS.md`**.
+
+### A dor do Módulo 11
+
+> *"Entrou gente nova. A primeira pergunta foi 'por que tem dois
+> bancos?'. Levei vinte minutos explicando. Semana que vem entra mais
+> alguém. E ontem eu abri uma rota e tinha um SELECT dentro — ninguém
+> sabe quem escreveu nem quando."*
+
+### A entrega do Módulo 11
+
+**O que só existia na sua cabeça, agora escrito e verificado.** Um mapa
+de camadas com a regra de import, ADRs preservando o contexto de cada
+decisão, e um verificador que lê os imports com `ast` e reprova no CI
+quem quebrar a regra.
+
+**Critério de aceitação:** você planta `from atlas.repositorio import ...`
+dentro de uma rota e o **CI fica vermelho**. Arquitetura que não é
+verificada é intenção.
+
+Ver **`ROTEIRO_M11.md`**, **`docs/ARQUITETURA.md`** e **`docs/adr/`**.
+
+### A dor do Módulo 12
+
+> *"Ninguém quer mexer no cálculo de frete. Funciona. Se quebrar, a
+> gente só descobre quando o cliente reclamar."*
+>
+> *"A gente tem 70% de cobertura. Mas mês passado subiu um bug de
+> arredondamento que ninguém pegou."*
+
+### A entrega do Módulo 12
+
+**A rede de segurança, e a prova de que ela segura.** Suíte separada
+por custo (unidade sem I/O, integração com banco dublado), piso de
+cobertura no CI, verificação de isolamento teste a teste, e um
+**testador de testes** que muta o código e exige que a suíte fique
+vermelha.
+
+**Critério de aceitação:** você troca um `>` por `>=` numa regra de
+negócio e **algum teste falha**. Cobertura diz quais linhas rodaram;
+só a mutação diz se alguém conferiu o resultado.
+
+Ver **`ROTEIRO_M12.md`** e **`docs/TESTES.md`**.
+
+### A dor do Módulo 13
+
+> *"Que versão está em produção?"* — e a resposta honesta é *"não
+> sei"*. O `pyproject.toml` diz `0.7.0`, o que parou no M07. Há treze
+> portões de qualidade espalhados, cada um construído e depois
+> esquecido. E documentos com `(preencha)` que alguém vai ler às 3h da
+> manhã achando que estão prontos.
+
+### A entrega do Módulo 13
+
+**Atlas 1.0.** Uma fonte de verdade para a versão, changelog escrito
+para quem usa (não `git log`), e um **portão de release** que roda os
+treze portões dos módulos anteriores e dá um veredito.
+
+**Critério de aceitação:** as **oito quebras** da etapa 5 do roteiro —
+import proibido, segredo literal, `>` virando `>=`, `datetime.now()` no
+ouro, `USER root`, rollback comentado — todas deixam o portão vermelho.
+Se alguma passar verde, você encontrou um portão decorativo.
+
+Ver **`ROTEIRO_M13.md`**, **`CHANGELOG.md`** e **`docs/APRESENTACAO.md`**.
 
 > 🎯 **A boa notícia:** seis dos oito requisitos para containerizar já estavam prontos — configuração por ambiente (M06), rota de saúde (M06), API sem estado (M06), dependências declaradas (M04), log estruturado (M04), segredos fora do código (M06). Você não os fez pensando em Docker; fez porque eram boas práticas.
 >
@@ -237,6 +322,11 @@ projeto_Atlas/
 ├── ROTEIRO_M07.md               ← implementação do M07 (integrações + testes)
 ├── ROTEIRO_M08.md               ← implementação do M08 (containers)
 ├── ROTEIRO_M09.md               ← implementação do M09 (deploy e CI/CD)
+├── ROTEIRO_M10.md               ← implementação do M10 (pipeline de dados)
+├── ROTEIRO_M11.md               ← implementação do M11 (arquitetura e ADRs)
+├── ROTEIRO_M12.md               ← implementação do M12 (suíte de testes)
+├── ROTEIRO_M13.md               ← implementação do M13 (Atlas 1.0)
+├── CHANGELOG.md                 ← M13: o que mudou, para quem usa
 ├── .github/workflows/           ← M09: ci.yml e cd.yml
 ├── infra/                       ← M09: systemd e nginx
 ├── Dockerfile                   ← M08: imagem multi-stage
@@ -261,7 +351,17 @@ projeto_Atlas/
 │   ├── INTEGRACOES.md           ← M07: resiliência, webhooks, cache, testes
 │   ├── CONTAINERS.md            ← M08: imagem, volumes, healthchecks
 │   ├── DEPLOY.md                ← M09: como publicar, e as decisões
-│   └── RUNBOOK.md               ← M09: 🔴 o que fazer quando quebrar
+│   ├── RUNBOOK.md               ← M09: 🔴 o que fazer quando quebrar
+│   ├── PIPELINE.md              ← M10: operação do pipeline (para as 3h da manhã)
+│   ├── METRICAS.md              ← M10: 🔑 o dicionário que encerra a discussão
+│   │                                   sobre "qual número é o certo"
+│   ├── APRESENTACAO.md          ← M13: como mostrar o sistema (roteiro de 10 min)
+│   ├── TESTES.md                ← M12: a estratégia, e por que cobertura engana
+│   ├── ARQUITETURA.md           ← M11: as camadas, e a regra de import
+│   └── adr/                     ← M11: 🔑 o PORQUÊ de cada decisão
+│       ├── README.md            ←      índice e convenções
+│       ├── 0000-template.md
+│       └── 0001..0004-*.md
 │
 ├── scripts/                     ← M02: automações de shell
 │   ├── README.md
@@ -277,7 +377,11 @@ projeto_Atlas/
 │   ├── entrada.sh               ← M08: entrypoint do container
 │   ├── auditar_containers.py    ← M08: o portão de CI
 │   ├── deploy.sh                ← M09: com verificação e rollback
-│   └── rollback.sh              ← M09: 🔴 um comando
+│   ├── rollback.sh              ← M09: 🔴 um comando
+│   ├── rodar_pipeline.py        ← M10: entrada do ETL (data como parâmetro)
+│   ├── verificar_camadas.py     ← M11: 🔑 a arquitetura que se prova sozinha
+│   ├── testar_os_testes.py      ← M12: 🔑 mutação — quebra o código de propósito
+│   └── verificar_release.py     ← M13: 🔑 todos os portões, de uma vez
 │
 ├── dados/
 │   ├── brutos/
@@ -295,7 +399,14 @@ projeto_Atlas/
 │   │   ├── curva_abc.sql
 │   │   ├── alerta_estoque.sql
 │   │   └── qualidade_dados.sql
-│   └── atlas.db                 ← M03: o banco (ignorado pelo Git)
+│   ├── atlas.db                 ← M03: o banco (ignorado pelo Git)
+│   └── lago/                    ← M10: o lago de dados (ignorado pelo Git)
+│       ├── LEIA-ME.md
+│       ├── bronze/              ← cru, como chegou — 🔴 NUNCA se apaga
+│       ├── prata/               ← limpo e validado (derivável)
+│       ├── ouro/                ← agregado, pronto (derivável)
+│       ├── quarentena/          ← o que não passou — evidência, não lixo
+│       └── estado/              ← marcas d'água
 │
 ├── saida/                       ← relatórios gerados (ignorado pelo Git)
 │
@@ -338,14 +449,29 @@ projeto_Atlas/
         │       ├── relatorios.py
         │       └── webhooks.py  ←   M07: recepção validada
         │
-        └── integracoes/         ← M07: o mundo lá fora
-            ├── cliente_http.py  ←   base: timeout, retry, disjuntor
-            ├── transportadora.py ←  Veloz: cotação e rastreio
-            ├── gateway.py       ←   pagamento e validação de webhook
-            └── cache.py         ←   cache-aside sobre Redis
+        ├── integracoes/         ← M07: o mundo lá fora
+        │   ├── cliente_http.py  ←   base: timeout, retry, disjuntor
+        │   ├── transportadora.py ←  Veloz: cotação e rastreio
+        │   ├── gateway.py       ←   pagamento e validação de webhook
+        │   └── cache.py         ←   cache-aside sobre Redis
+        │
+        └── dados/               ← M10: o pipeline analítico
+            ├── extracao.py      ←   origens + marca d'água + bronze
+            ├── contratos.py     ←   o que é dado válido + quarentena
+            ├── transformacao.py ←   bronze → prata → ouro
+            ├── qualidade.py     ←   🔴 as seis verificações
+            └── orquestracao.py  ←   DAG, trava, retry
 
-tests/                           ← M07: a suíte que dá coragem
+tests/                           ← M07 + M12: a suíte que dá coragem
 ├── conftest.py                  ←   fixtures (banco isolado, cliente)
+├── unidade/                     ← M12: 🔴 < 10 ms, sem disco/banco/rede
+│   ├── test_regras.py
+│   ├── test_metricas.py
+│   └── test_validacao.py
+├── integracao/                  ← M12: banco e HTTP dublado
+│   ├── test_repositorio.py
+│   ├── test_servicos.py
+│   └── test_pipeline_dados.py
 ├── test_seguranca.py            ←   🔒 vazamento, autorização, injeção
 └── test_integracoes.py          ←   com respx: sem tocar a internet
 ```
@@ -361,6 +487,25 @@ tests/                           ← M07: a suíte que dá coragem
 > É a mudança de mentalidade do M07: como servidor você controla tudo;
 > como cliente você não controla **nada** — nem a disponibilidade, nem a
 > latência, nem o formato que o parceiro vai mudar sem avisar.
+
+> 🎯 **`api/` vs `dados/` — os dois lados do sistema.**
+>
+> | | `api/` | `dados/` |
+> |---|--------|----------|
+> | Ritmo | milissegundos | uma vez por noite |
+> | Volume | uma linha por vez | milhões de linhas |
+> | Perfil | OLTP — transacional | OLAP — analítico |
+> | Se cair | o cliente vê agora | ninguém vê até de manhã |
+> | Otimiza para | latência | vazão |
+>
+> A regra que justifica a separação inteira: **o pipeline nunca
+> consulta o banco que atende o cliente em horário de pico, e nunca
+> escreve nele.** Ele lê uma réplica, escreve no lago, e a API lê o
+> lago quando precisa de um agregado.
+>
+> É por isso que o relatório que demorava 40 segundos e deixava o site
+> lento passa a responder em 200 ms: ele deixou de ser uma consulta e
+> virou a leitura de um arquivo que já estava pronto.
 
 > 🎯 **`orm/modelos.py` vs `api/esquemas.py` — a distinção que mais confunde.**
 >
@@ -598,6 +743,71 @@ Saídas geradas em `saida/`:
 | `relatorio.json` | Mesma informação, estruturada para outro sistema consumir |
 | `rejeitados.csv` | Linhas descartadas, com número da linha e motivo |
 
+### Rodando o pipeline de dados (M10)
+
+**Preparar o ambiente** — uma vez:
+
+```bash
+# 1. dependências do pipeline
+pip install pandas==2.2.3 pyarrow==17.0.0
+
+# 🔴 pyarrow NÃO é opcional. Sem ele, o pandas não lê nem escreve
+#    Parquet, e o erro ("Unable to find a usable engine") não deixa
+#    nada óbvio sobre o que falta.
+
+# 2. réplica de leitura — 🔴 URL SEPARADA do primário
+#    Acrescente ao seu .env:
+#      ATLAS_BANCO_REPLICA_URL=postgresql://leitor:senha@localhost:5433/atlas
+#
+#    Não tem réplica? Aponte para o mesmo banco POR ENQUANTO e
+#    escreva isso em docs/PIPELINE.md. O que não pode é o código
+#    cair no primário sozinho, em silêncio.
+
+# 3. o lago (as pastas já vêm no repositório, com .gitkeep)
+ls dados/lago/
+```
+
+**Rodar:**
+
+```bash
+python scripts/rodar_pipeline.py                  # ontem
+python scripts/rodar_pipeline.py 2026-03-12       # um dia específico
+python scripts/rodar_pipeline.py 2026-03-01 2026-03-31   # intervalo
+python scripts/rodar_pipeline.py --seco           # mostra o que faria
+```
+
+> 🔴 **Por que o padrão é ontem e não hoje.** Porque hoje ainda não
+> acabou. Rodar "hoje" às 3h da manhã processa 3 horas de pedidos e
+> chama isso de "o dia" — o número sai baixo e não há erro nenhum
+> para investigar.
+
+**Códigos de saída** (é o que cron, systemd e Airflow leem — não a
+saída bonita):
+
+| Código | Significado |
+|--------|-------------|
+| `0` | sucesso |
+| `1` | tarefa crítica falhou |
+| `2` | trava ocupada — outra rodada em curso, é normal |
+| `3` | 🔴 portão de qualidade reprovou |
+
+**Conferir o que saiu:**
+
+```bash
+# o que foi produzido
+ls dados/lago/ouro/
+
+# a marca d'água de cada fonte
+cat dados/lago/estado/marca_*.json
+
+# o que não passou, e por quê
+ls dados/lago/quarentena/
+
+# 🔑 prova de idempotência: rodar 2× tem que dar o MESMO hash
+python scripts/rodar_pipeline.py 2026-03-12 && sha256sum dados/lago/ouro/*.parquet
+python scripts/rodar_pipeline.py 2026-03-12 && sha256sum dados/lago/ouro/*.parquet
+```
+
 ---
 
 ## 4. O que você precisa implementar
@@ -666,11 +876,11 @@ Onde este módulo se encaixa na jornada completa:
 | ✅ M06 | *"O time do app precisa acessar os dados"* | API Atlas v1 (FastAPI, JWT, OpenAPI) |
 | ✅ M07 | *"Precisamos falar com transportadora e gateway"* | Integrações resilientes, Redis, webhooks, testes |
 | ✅ M08 | *"Configurar a máquina de um dev leva 2 dias"* | Dockerfile + docker-compose + auditoria |
-| **M09** | *"Subir versão nova é um ritual de risco"* | **CI/CD + proxy reverso + monitoramento** ← você está aqui |
-| M10 | *"Decidimos com dados de 3 semanas atrás"* | ETL diário + orquestração |
-| M11 | *"Ninguém sabe por que o sistema é assim"* | ADRs e separação de camadas |
-| M12 | *"Temos medo de mexer no código"* | Suíte de testes (pytest) no CI |
-| M13 | — | **Atlas 1.0** consolidado |
+| ✅ M09 | *"Subir versão nova é um ritual de risco"* | CI/CD + proxy reverso + monitoramento |
+| ✅ M10 | *"Decidimos com dados de 3 semanas atrás"* | Pipeline diário: lago, qualidade, orquestração |
+| ✅ M11 | *"Ninguém sabe por que o sistema é assim"* | ADRs + camadas verificadas no CI |
+| ✅ M12 | *"Temos medo de mexer no código"* | Suíte por camada + mutação |
+| **M13** | *"Que versão está em produção?"* | **Atlas 1.0: versão, changelog, portão de release** ← você está aqui |
 
 ---
 
@@ -698,6 +908,18 @@ Onde este módulo se encaixa na jornada completa:
 | `alembic` não detecta nada | Faltou `target_metadata` no `env.py` | Aponte para `Base.metadata` |
 | Migração apagou uma coluna renomeada | Autogenerate não detecta rename | **Sempre revise antes de aplicar** |
 | Pedido referencia produto inexistente | Não há FK entre os bancos | Rode a reconciliação (`verificar_integridade`) |
+| `Unable to find a usable engine` ao ler Parquet | Falta `pyarrow` | `pip install pyarrow` — o pandas não lê Parquet sozinho |
+| Acentos viram `AÃ§Ã£o` no CSV do parceiro | `latin-1` testado antes do `utf-8` | 🔴 `latin-1` decodifica **qualquer** byte e nunca levanta erro — deixe-o por **último** na lista |
+| Faturamento sai como texto concatenado ou `NaN` | CSV pt-BR lido com padrão americano | `sep=';'`, `decimal=','`, `thousands='.'` — e **confira os dtypes** depois |
+| Total do relatório menor que o real, sem erro | `groupby` descartou o grupo com chave nula | `dropna=False` e trate o grupo nulo explicitamente |
+| Você faturou um pedido cancelado | `drop_duplicates` manteve a **primeira** ocorrência | Ordene por `atualizado_em` e use `keep='last'` |
+| Pedidos somem entre rodadas | Marca d'água sem margem (COMMIT depois do `atualizado_em`) | Use `marca − MARGEM_SEGURANCA` e faça a etapa seguinte idempotente |
+| Dado desapareceu após uma falha de disco | Marca salva **antes** de gravar o bronze | Marca d'água é commit: salve **por último** |
+| Rodar 2× o mesmo dia dá hashes diferentes | `datetime.now()` dentro da transformação, ou ordem de linhas indefinida | Data como parâmetro; ordene antes de gravar; `gerado_em` no manifesto, não no parquet |
+| Pipeline nunca mais roda após um `kill -9` | Trava órfã, sem TTL | `SET ... NX EX <ttl>`; e libere conferindo o dono |
+| Cron diz que deu tudo certo, mas não deu | Script imprime erro e devolve código `0` | O agendador lê **o código de saída**, não a sua saída |
+| Alerta de volume toca todo sábado | Comparando com a mediana geral | Compare com o mesmo dia da semana |
+| Portão nunca reprovou nada | Provavelmente ele não funciona | Estrague o dado de propósito (ROTEIRO_M10, etapa 8) |
 | `git status` mostra `.venv/` | `.gitignore` ausente ou o venv já foi commitado | `git rm -r --cached .venv` |
 | Diff mostra o arquivo inteiro alterado | Fim de linha (CRLF vs LF) | O `.gitattributes` resolve; renormalize com `git add --renormalize .` |
 | `Permission denied` ao rodar `./scripts/setup.sh` | Falta bit de execução | `chmod +x scripts/*.sh` |
@@ -806,4 +1028,4 @@ Seguimos a [PEP 8](https://peps.python.org/pep-0008/):
 
 ---
 
-*Atlas · Aurora Comércio · Módulo 01*
+*Atlas 1.0 · Aurora Comércio · Módulos 01–13*

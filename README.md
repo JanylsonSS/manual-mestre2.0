@@ -42,7 +42,7 @@ Roadmap/
 ├── Modulo_07_APIs_na_Pratica/      ← 4 notebooks
 ├── Modulo_08_Docker/               ← 4 notebooks
 ├── Modulo_09_Deploy_CICD/          ← 4 notebooks
-│   └── (10 conforme for gerado)
+├── Modulo_10_Engenharia_de_Dados/  ← 7 notebooks
 │
 └── projeto_Atlas/                  ← o projeto prático transversal
 ```
@@ -65,9 +65,10 @@ Dentro de cada módulo, os arquivos seguem a numeração `MM_AA_Nome.ipynb`, e o
 | 07 | **APIs na Prática** | 4 | Consumo resiliente, webhooks, cache, WebSockets, testes |
 | 08 | **Docker** | 4 | Containers, Dockerfile, Compose, orquestração local |
 | 09 | **Deploy e CI/CD** | 4 | Servidores, proxy reverso, GitHub Actions, monitoramento |
-| 10 | **Engenharia de Dados** | 7 | Pandas, Polars, scraping, ETL, Airflow, Kafka |
+| 10 | **Engenharia de Dados** | 7 | Pandas, Polars, DuckDB, scraping, ETL, qualidade, filas, DAGs |
 
-**Estado atual:** Módulos 01 a 09 prontos (43 notebooks, 3.104 células).
+**Estado atual:** ✅ **manual completo** — os 10 módulos, 50 notebooks,
+3.560 células (2.062 delas de código executável).
 
 ---
 
@@ -92,12 +93,19 @@ A cada módulo, uma dor nova do negócio:
 | M07 | *"Precisamos falar com a transportadora"* | Integrações resilientes |
 | M08 | *"Configurar a máquina leva 2 dias"* | Containerização |
 | M09 | *"Subir versão é um ritual de risco"* | CI/CD |
-| M10 | *"Decidimos com dados de 3 semanas atrás"* | ETL + orquestração |
-| M11–13 | *"Temos medo de mexer no código"* | ADRs, testes, Atlas 1.0 |
+| M10 | *"Decidimos com dados de 3 semanas atrás"* | Pipeline de dados diário |
+| M11 | *"Ninguém sabe por que o sistema é assim"* | ADRs + camadas verificadas no CI |
+| M12 | *"Temos medo de mexer no código"* | Suíte por camada + teste de mutação |
+| M13 | *"Que versão está em produção?"* | Atlas 1.0: changelog e portão de release |
 
 O `projeto_Atlas/` vem como **esqueleto**: estrutura de pastas, assinaturas de
 função, docstrings e comentários `# TODO` dizendo o que fazer. **A solução não
 está lá** — o código é seu.
+
+> 🔑 As etapas **M11, M12 e M13 não têm notebooks** — são só projeto. O
+> currículo de aulas encerra no M10; daqui em diante o trabalho é sobre o
+> sistema que você construiu: registrar as decisões, provar que os testes
+> pegam bug, e fechar a versão 1.0.
 
 ---
 
@@ -175,18 +183,36 @@ Todos os notebooks foram executados célula a célula num simulador fiel ao
 Jupyter (usando o próprio transformador de entrada do IPython), e as saídas
 foram inspecionadas manualmente.
 
-Até aqui: **1.770 células de código, zero falhas**. Os comandos Git rodam de
-verdade em repositórios descartáveis, o SQL executa contra um SQLite real, o
-Alembic gera e aplica migrações de verdade, as APIs do M06 respondem a
+Resultado final: **2.062 células de código, zero falhas**. Os comandos Git
+rodam de verdade em repositórios descartáveis, o SQL executa contra um SQLite
+real, o Alembic gera e aplica migrações de verdade, as APIs do M06 respondem a
 requisições HTTP reais, o M07 sobe servidores em `127.0.0.1` e fala com eles
 por **HTTP sobre socket** (para que timeout e recusa de conexão sejam de
 verdade), o `pytest` roda 47 testes reais, o M08 constrói containers ao vivo
 com `unshare` (os cinco namespaces do Linux, sem precisar de Docker), o M09
-sobe Gunicorn com múltiplos workers e um proxy reverso de verdade, e os
-benchmarks de memória e concorrência foram medidos, não estimados.
+sobe Gunicorn com múltiplos workers e um proxy reverso de verdade, o M10 mede
+pandas, Polars e DuckDB sobre os mesmos dados e executa um DAG com retry e
+propagação de falha — e os benchmarks de memória e concorrência foram medidos,
+não estimados.
 
 Isso importa porque um manual em que uma célula não roda é um manual em que
 você vai perder uma hora achando que o erro é seu.
+
+### E as verificações foram verificadas
+
+Toda bateria de aceitação do manual — os checadores que dizem se o seu Atlas
+está pronto — foi rodada **duas vezes**: contra um projeto correto (deve
+aprovar) e contra um projeto quebrado de propósito (deve reprovar).
+
+Isso encontrou defeitos reais nos próprios checadores. Um exemplo: a bateria de
+qualidade do M10 aprovava um projeto sem a verificação de volume, porque
+procurava a palavra `esperad` e um **nome de parâmetro** casava. A limitação
+está agora impressa na saída da própria bateria, de propósito — porque é a
+lição:
+
+> 🔑 Um verificador que lê texto pode ser enganado por um nome de variável.
+> Comportamento só se prova **executando**. E um verificador que aprova código
+> errado é pior que nenhum: ele dá confiança sem base.
 
 ### Bancos de dados: dois modos
 

@@ -15,7 +15,25 @@
 #   M06  ->  fastapi, uvicorn[standard], python-jose, passlib[bcrypt]
 #   M07  ->  httpx, redis, tenacity
 #   M10  ->  pandas, polars, pyarrow, beautifulsoup4, selenium
-#   M12  ->  pytest, pytest-cov
+#
+# ---------------------------------------------------------------------------
+# MÓDULO 10 — o pipeline de dados
+#
+# Descomente conforme for chegando em cada etapa do ROTEIRO_M10.md.
+#
+# pandas==2.2.3          # etapa 2 em diante
+# pyarrow==17.0.0        # 🔴 obrigatório para Parquet — pandas não lê
+#                        #    parquet sozinho, e o erro que ele dá quando
+#                        #    falta ("Unable to find a usable engine") não
+#                        #    é nada óbvio
+# polars==1.9.0          # etapa 5, se você optar por lazy
+# beautifulsoup4==4.12.3 # só se a origem for HTML
+# lxml==5.3.0            # parser rápido para o bs4
+#
+# ⚠️ `selenium` NÃO está aqui de propósito. Ele baixa um navegador
+#    inteiro e só se justifica quando a página monta o conteúdo por
+#    JavaScript. Antes de instalá-lo, confira se a página não tem uma
+#    API JSON por trás — quase sempre tem, e aí o httpx do M07 resolve.
 #
 # ---------------------------------------------------------------------------
 # Ferramentas de desenvolvimento (opcionais, mas recomendadas já no M01).

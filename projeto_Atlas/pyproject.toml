@@ -22,7 +22,7 @@ build-backend = "setuptools.build_meta"
 # ═══════════════════════════════════════════════════════════════
 [project]
 name = "atlas"
-version = "0.7.0"
+version = "0.12.0"   # TODO (M13): 1.0.0 quando fechar o roteiro
 description = "Sistema central da Aurora Comércio"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -196,6 +196,32 @@ markers = [
 # 🔴 --strict-markers: um marcador com erro de digitação vira ERRO, não
 #    um teste silenciosamente ignorado. Sem isso, @pytest.mark.lentoo
 #    simplesmente não faz nada — e você nunca descobre.
+
+# TODO no M12: mais três opções que valem o que custam.
+#
+# addopts = "-q --strict-markers --strict-config -ra --durations=10"
+#
+#   --strict-config   erro de digitação NESTE arquivo vira erro.
+#                     Sem ele, `markrs = [...]` é ignorado em silêncio
+#                     e você perde uma tarde.
+#   -ra               resumo de tudo que não passou limpo — inclusive
+#                     os `skip` e `xfail`, que somem da saída padrão.
+#                     🔑 Um `skip` esquecido há seis meses é um teste
+#                     que você acha que tem e não tem.
+#   --durations=10    os 10 testes mais lentos. É como você descobre
+#                     que um teste de "unidade" está abrindo conexão.
+
+# TODO no M12: e o que separa suíte confiável de suíte que engana.
+#
+#   pip install pytest-randomly
+#
+# Ele embaralha a ordem dos testes a cada execução. Testes que só
+# passam na ordem "certa" começam a falhar — de forma incômoda, e é
+# esse o ponto.
+#
+# ⚠️ Ele vai quebrar coisas na primeira vez. Não desinstale: cada
+#    falha é uma dependência de ordem que já existia e que você não
+#    estava vendo. A suíte não piorou — ficou honesta.
 
 
 # ═══════════════════════════════════════════════════════════════
